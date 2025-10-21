@@ -259,12 +259,15 @@
             border-bottom-left-radius: 6px;
             border-top-right-radius: 0;
             border-bottom-right-radius: 0;
+            margin-right: -2px;
+            z-index: 2;
         }
 
         .event-item.continuous-middle {
             border-radius: 0;
-            margin-left: 0;
-            margin-right: 0;
+            margin-left: -2px;
+            margin-right: -2px;
+            z-index: 1;
         }
 
         .event-item.continuous-end {
@@ -272,6 +275,8 @@
             border-bottom-left-radius: 0;
             border-top-right-radius: 6px;
             border-bottom-right-radius: 6px;
+            margin-left: -2px;
+            z-index: 2;
         }
 
         .event-item.continuous-single {
@@ -1106,7 +1111,8 @@
                     
                     processedEvents.push({
                         ...event,
-                        continuousClass: continuousClass
+                        continuousClass: continuousClass,
+                        isContinuous: true
                     });
                 }
             });
