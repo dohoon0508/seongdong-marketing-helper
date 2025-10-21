@@ -23,15 +23,15 @@
 
         .container {
             width: 100%;
-            max-width: 900px;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            overflow: hidden;
+            max-width: 1200px;
+            background: transparent;
+            border-radius: 0;
+            box-shadow: none;
+            overflow: visible;
             display: flex;
             flex-direction: column;
-            height: 90vh;
-            max-height: 800px;
+            min-height: 100vh;
+            padding: 20px;
         }
 
         .header {
@@ -39,33 +39,12 @@
             color: white;
             padding: 25px 30px;
             text-align: center;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
             position: relative;
+            border-radius: 20px;
+            margin-bottom: 20px;
         }
 
-        .home-button {
-            position: absolute;
-            left: 30px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: rgba(255, 255, 255, 0.2);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 25px;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-
-        .home-button:hover {
-            background: rgba(255, 255, 255, 0.3);
-            border-color: rgba(255, 255, 255, 0.5);
-            transform: translateY(-50%) translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        }
 
         .header h1 {
             font-size: 24px;
@@ -82,7 +61,248 @@
             flex: 1;
             overflow-y: auto;
             padding: 30px;
-            background: #f8f9fa;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        /* 달력 섹션 스타일 */
+        .calendar-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .calendar-header-section h2 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+            font-size: 24px;
+            text-align: center;
+            font-weight: 700;
+        }
+
+        .calendar-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .month-navigation {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .nav-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .nav-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .current-month {
+            font-size: 20px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .event-filters {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-button {
+            padding: 8px 16px;
+            border: 2px solid transparent;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            color: #6c757d;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .filter-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .filter-button.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            background: transparent;
+            border-radius: 12px;
+            padding: 10px;
+        }
+
+        .calendar-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 8px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 12px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .calendar-day {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            min-height: 80px;
+            padding: 10px;
+            border: none;
+            border-radius: 10px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            overflow: visible;
+        }
+
+        .calendar-day:hover {
+            background: linear-gradient(135deg, #f0f4ff 0%, #e8f2ff 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .calendar-day.other-month {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            color: #adb5bd;
+            opacity: 0.6;
+        }
+
+        .calendar-day.today {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .calendar-day.today .day-number {
+            color: white;
+            font-weight: 700;
+        }
+
+        .day-number {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+            color: #2c3e50;
+        }
+
+        .holiday {
+            color: #e74c3c;
+            font-weight: 700;
+            font-size: 9px;
+            background: rgba(231, 76, 60, 0.1);
+            padding: 2px 4px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-bottom: 2px;
+        }
+
+        .event-item {
+            font-size: 8px;
+            padding: 3px 6px;
+            margin: 2px 0;
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-weight: 500;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        /* 연속 이벤트 표시를 위한 스타일 */
+        .event-item.continuous-start {
+            border-top-left-radius: 6px;
+            border-bottom-left-radius: 6px;
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+
+        .event-item.continuous-middle {
+            border-radius: 0;
+            margin-left: 0;
+            margin-right: 0;
+        }
+
+        .event-item.continuous-end {
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+            border-top-right-radius: 6px;
+            border-bottom-right-radius: 6px;
+        }
+
+        .event-item.continuous-single {
+            border-radius: 6px;
+        }
+
+        .event-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .event-general {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+        }
+
+        .event-popup {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+
+        .event-university {
+            background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+        }
+
+        .event-movie {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        }
+
+        .event-more {
+            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+            text-align: center;
+            font-weight: 600;
         }
 
         .message {
@@ -480,14 +700,35 @@
 <body>
     <div class="container">
         <div class="header">
-            <button class="home-button" onclick="goHome()">
-                🏠 홈으로
-            </button>
             <h1>🚀 성동구 소상공인 마케팅 도우미</h1>
             <p>Powered by Google Gemini Flash 2.5</p>
         </div>
         
         <div class="chat-container" id="chatContainer">
+            <!-- 달력 섹션 -->
+            <div class="calendar-section" id="calendarSection">
+                <div class="calendar-header-section">
+                    <h2>📅 성동구 마케팅 달력</h2>
+                    <div class="calendar-controls">
+                        <div class="month-navigation">
+                            <button class="nav-button" onclick="changeMonth(-1)">◀ 이전</button>
+                            <div class="current-month" id="currentMonth">2024년 10월</div>
+                            <button class="nav-button" onclick="changeMonth(1)">다음 ▶</button>
+                        </div>
+                        <div class="event-filters">
+                            <button class="filter-button active" data-filter="all">전체</button>
+                            <button class="filter-button" data-filter="general">일반 이벤트</button>
+                            <button class="filter-button" data-filter="popup">팝업</button>
+                            <button class="filter-button" data-filter="university">대학 이벤트</button>
+                            <button class="filter-button" data-filter="movie">영화</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="calendar-grid" id="calendarGrid">
+                    <!-- 달력이 여기에 동적으로 생성됩니다 -->
+                </div>
+            </div>
+
             <div class="typing-indicator" id="typingIndicator">
                 <div class="message-avatar">🤖</div>
                 <div class="typing-dots">
@@ -685,31 +926,271 @@
             }
         }
 
-        // 홈으로 가기 함수
-        function goHome() {
-            const chatContainer = document.getElementById('chatContainer');
-            const welcomeMessage = document.getElementById('welcomeMessage');
-            
-            // 채팅 히스토리 숨기기
-            const messages = chatContainer.querySelectorAll('.message');
-            messages.forEach(message => message.remove());
-            
-            // 웰컴 메시지 보이기
-            if (welcomeMessage) {
-                welcomeMessage.style.display = 'block';
-            }
-            
-            // 타이핑 인디케이터 숨기기
-            document.getElementById('typingIndicator').classList.remove('active');
-            
-            // 입력창에 포커스
-            document.getElementById('userInput').focus();
-        }
 
-        // 페이지 로드 시 입력창에 포커스
+        // 달력 관련 변수
+        let currentDate = new Date(2024, 9, 1); // 2024년 10월
+        let events = {};
+        let activeFilter = 'all';
+
+        // 한국 공휴일 데이터
+        const holidays = {
+            '2024-01-01': '신정',
+            '2024-02-09': '설날',
+            '2024-02-10': '설날',
+            '2024-02-11': '설날',
+            '2024-02-12': '대체휴일',
+            '2024-03-01': '삼일절',
+            '2024-04-10': '국회의원선거',
+            '2024-05-05': '어린이날',
+            '2024-05-06': '대체휴일',
+            '2024-05-15': '부처님오신날',
+            '2024-06-06': '현충일',
+            '2024-08-15': '광복절',
+            '2024-09-16': '추석',
+            '2024-09-17': '추석',
+            '2024-09-18': '추석',
+            '2024-10-03': '개천절',
+            '2024-10-09': '한글날',
+            '2024-12-25': '크리스마스'
+        };
+
+        // 페이지 로드 시 초기화
         document.addEventListener('DOMContentLoaded', () => {
+            loadEvents();
+            renderCalendar();
+            setupEventFilters();
             document.getElementById('userInput').focus();
         });
+
+        // 이벤트 데이터 로드
+        async function loadEvents() {
+            try {
+                const response = await fetch('/api/calendar-events');
+                const data = await response.json();
+                events = data.events || {};
+                renderCalendar();
+            } catch (error) {
+                console.error('이벤트 데이터 로드 실패:', error);
+            }
+        }
+
+        // 달력 렌더링
+        function renderCalendar() {
+            const calendarGrid = document.getElementById('calendarGrid');
+            calendarGrid.innerHTML = '';
+
+            // 요일 헤더
+            const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+            weekdays.forEach(day => {
+                const header = document.createElement('div');
+                header.className = 'calendar-header';
+                header.textContent = day;
+                calendarGrid.appendChild(header);
+            });
+
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startDate = new Date(firstDay);
+            startDate.setDate(startDate.getDate() - firstDay.getDay());
+
+            // 6주 표시를 위해 42일 생성
+            for (let i = 0; i < 42; i++) {
+                const date = new Date(startDate);
+                date.setDate(startDate.getDate() + i);
+                
+                const dayElement = createDayElement(date, month);
+                calendarGrid.appendChild(dayElement);
+            }
+
+            // 현재 월 표시 업데이트
+            document.getElementById('currentMonth').textContent = 
+                `${year}년 ${month + 1}월`;
+        }
+
+        // 날짜 요소 생성
+        function createDayElement(date, currentMonth) {
+            const dayElement = document.createElement('div');
+            dayElement.className = 'calendar-day';
+            
+            const dayNumber = date.getDate();
+            const dateString = formatDate(date);
+            const isCurrentMonth = date.getMonth() === currentMonth;
+            const isToday = isSameDate(date, new Date());
+
+            if (!isCurrentMonth) {
+                dayElement.classList.add('other-month');
+            }
+            if (isToday) {
+                dayElement.classList.add('today');
+            }
+
+            // 날짜 번호
+            const dayNumberElement = document.createElement('div');
+            dayNumberElement.className = 'day-number';
+            dayNumberElement.textContent = dayNumber;
+            dayElement.appendChild(dayNumberElement);
+
+            // 공휴일 표시
+            if (holidays[dateString]) {
+                const holidayElement = document.createElement('div');
+                holidayElement.className = 'holiday';
+                holidayElement.textContent = holidays[dateString];
+                dayElement.appendChild(holidayElement);
+            }
+
+            // 이벤트 표시
+            if (events[dateString]) {
+                const dayEvents = events[dateString];
+                const filteredEvents = filterEvents(dayEvents);
+                
+                // 연속 이벤트 처리
+                const processedEvents = processContinuousEvents(filteredEvents, dateString);
+                
+                processedEvents.slice(0, 2).forEach(event => {
+                    const eventElement = document.createElement('div');
+                    eventElement.className = `event-item event-${event.type} ${event.continuousClass || ''}`;
+                    eventElement.textContent = event.name;
+                    eventElement.onclick = (e) => {
+                        e.stopPropagation();
+                        showEventDetails(event);
+                    };
+                    dayElement.appendChild(eventElement);
+                });
+
+                if (processedEvents.length > 2) {
+                    const moreElement = document.createElement('div');
+                    moreElement.className = 'event-item event-more';
+                    moreElement.textContent = `+${processedEvents.length - 2}`;
+                    moreElement.onclick = (e) => {
+                        e.stopPropagation();
+                        showEventDetails({...event, allEvents: processedEvents});
+                    };
+                    dayElement.appendChild(moreElement);
+                }
+            }
+
+            return dayElement;
+        }
+
+        // 연속 이벤트 처리 함수
+        function processContinuousEvents(dayEvents, currentDateString) {
+            const processedEvents = [];
+            
+            dayEvents.forEach(event => {
+                const startDate = new Date(event.startDate);
+                const endDate = new Date(event.endDate);
+                const currentDate = new Date(currentDateString);
+                
+                // 이벤트가 하루만 지속되는 경우
+                if (isSameDate(startDate, endDate)) {
+                    processedEvents.push({
+                        ...event,
+                        continuousClass: 'continuous-single'
+                    });
+                    return;
+                }
+                
+                // 연속 이벤트인 경우
+                if (currentDate >= startDate && currentDate <= endDate) {
+                    let continuousClass = '';
+                    
+                    if (isSameDate(currentDate, startDate)) {
+                        continuousClass = 'continuous-start';
+                    } else if (isSameDate(currentDate, endDate)) {
+                        continuousClass = 'continuous-end';
+                    } else {
+                        continuousClass = 'continuous-middle';
+                    }
+                    
+                    processedEvents.push({
+                        ...event,
+                        continuousClass: continuousClass
+                    });
+                }
+            });
+            
+            return processedEvents;
+        }
+
+        // 이벤트 필터링
+        function filterEvents(dayEvents) {
+            if (activeFilter === 'all') return dayEvents;
+            return dayEvents.filter(event => event.type === activeFilter);
+        }
+
+        // 월 변경
+        function changeMonth(direction) {
+            currentDate.setMonth(currentDate.getMonth() + direction);
+            renderCalendar();
+        }
+
+        // 이벤트 필터 설정
+        function setupEventFilters() {
+            const filterButtons = document.querySelectorAll('.filter-button');
+            filterButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    filterButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    activeFilter = this.dataset.filter;
+                    renderCalendar();
+                });
+            });
+        }
+
+        // 이벤트 상세 보기
+        function showEventDetails(event) {
+            let content = '';
+            if (event.allEvents) {
+                content = `<h3>${formatDate(new Date(event.date))} 이벤트</h3>`;
+                event.allEvents.forEach(evt => {
+                    content += createEventInfo(evt);
+                });
+            } else {
+                content = `<h3>${event.name}</h3>`;
+                content += createEventInfo(event);
+            }
+
+            // 간단한 알림으로 표시
+            alert(content.replace(/<[^>]*>/g, ''));
+        }
+
+        // 이벤트 정보 생성
+        function createEventInfo(event) {
+            return `
+이벤트명: ${event.name}
+타입: ${getEventTypeName(event.type)}
+기간: ${event.startDate} ~ ${event.endDate}
+위치: ${event.location}
+타겟: ${event.target}
+설명: ${event.description}
+            `;
+        }
+
+        // 이벤트 타입명 변환
+        function getEventTypeName(type) {
+            const typeNames = {
+                'general': '일반 이벤트',
+                'popup': '팝업',
+                'university': '대학 이벤트',
+                'movie': '영화'
+            };
+            return typeNames[type] || type;
+        }
+
+        // 유틸리티 함수들
+        function formatDate(date) {
+            return date.getFullYear() + '-' + 
+                   String(date.getMonth() + 1).padStart(2, '0') + '-' + 
+                   String(date.getDate()).padStart(2, '0');
+        }
+
+        function isSameDate(date1, date2) {
+            return date1.getFullYear() === date2.getFullYear() &&
+                   date1.getMonth() === date2.getMonth() &&
+                   date1.getDate() === date2.getDate();
+        }
     </script>
 </body>
 </html>

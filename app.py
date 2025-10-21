@@ -4,6 +4,8 @@ import google.generativeai as genai
 import os
 from dotenv import load_dotenv
 import markdown
+import pandas as pd
+from datetime import datetime, timedelta
 
 # 환경 변수 로드
 load_dotenv()
@@ -21,9 +23,94 @@ model = genai.GenerativeModel('gemini-2.5-flash')
 # 대화 히스토리 저장
 chat_sessions = {}
 
+# 이벤트 데이터 로드 함수
+def load_event_data():
+    events = {}
+    
+    try:
+        # 성동구 공통 이벤트 데이터 로드
+        common_events_df = pd.read_csv('documents/raw/성동구 공통_한양대_흥행영화 이벤트 DB2.csv', encoding='utf-8')
+        
+        for _, row in common_events_df.iterrows():
+            start_date = pd.to_datetime(row['Start_Date'], format='%Y.%m.%d', errors='coerce')
+            end_date = pd.to_datetime(row['End_Date'], format='%Y.%m.%d', errors='coerce')
+            
+            if pd.isna(start_date) or pd.isna(end_date):
+                continue
+                
+            # 이벤트 타입 분류
+            event_type = 'general'
+            if '팝업' in str(row['Event_Type']):
+                event_type = 'popup'
+            elif '대학' in str(row['Event_Type']) or '한양대' in str(row['Event_Name']):
+                event_type = 'university'
+            elif '영화' in str(row['Event_Type']) or '개봉' in str(row['Event_Name']):
+                event_type = 'movie'
+            
+            # 날짜 범위에 따라 이벤트 추가
+            current_date = start_date
+            while current_date <= end_date:
+                date_str = current_date.strftime('%Y-%m-%d')
+                if date_str not in events:
+                    events[date_str] = []
+                
+                events[date_str].append({
+                    'name': row['Event_Name'],
+                    'type': event_type,
+                    'startDate': start_date.strftime('%Y-%m-%d'),
+                    'endDate': end_date.strftime('%Y-%m-%d'),
+                    'location': row['Location_Address'],
+                    'target': row['Target_Audience'],
+                    'description': row['Event_Description']
+                })
+                
+                current_date += timedelta(days=1)
+                
+    except Exception as e:
+        print(f"공통 이벤트 데이터 로드 실패: {e}")
+    
+    try:
+        # 성수 팝업 데이터 로드
+        popup_events_df = pd.read_csv('documents/raw/성수 팝업 최종2.csv', encoding='utf-8')
+        
+        for _, row in popup_events_df.iterrows():
+            start_date = pd.to_datetime(row['Start_Date'], format='%Y.%m.%d', errors='coerce')
+            end_date = pd.to_datetime(row['End_Date'], format='%Y.%m.%d', errors='coerce')
+            
+            if pd.isna(start_date) or pd.isna(end_date):
+                continue
+            
+            # 날짜 범위에 따라 이벤트 추가
+            current_date = start_date
+            while current_date <= end_date:
+                date_str = current_date.strftime('%Y-%m-%d')
+                if date_str not in events:
+                    events[date_str] = []
+                
+                events[date_str].append({
+                    'name': row['Event_Name'],
+                    'type': 'popup',
+                    'startDate': start_date.strftime('%Y-%m-%d'),
+                    'endDate': end_date.strftime('%Y-%m-%d'),
+                    'location': row['Location_Address'],
+                    'target': row['Target_Audience'],
+                    'description': row['Event_Description']
+                })
+                
+                current_date += timedelta(days=1)
+                
+    except Exception as e:
+        print(f"팝업 이벤트 데이터 로드 실패: {e}")
+    
+    return events
+
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/calendar')
+def calendar():
+    return render_template('calendar.html')
 
 @app.route('/api/chat', methods=['POST'])
 def chat():
@@ -126,6 +213,15 @@ def reset():
     
     except Exception as e:
         return jsonify({'error': f'오류가 발생했습니다: {str(e)}'}), 500
+
+@app.route('/api/calendar-events', methods=['GET'])
+def get_calendar_events():
+    """달력 이벤트 데이터 API"""
+    try:
+        events = load_event_data()
+        return jsonify({'events': events})
+    except Exception as e:
+        return jsonify({'error': f'이벤트 데이터 로드 실패: {str(e)}'}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=8080)
