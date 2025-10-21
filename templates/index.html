@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>성동구 소상공인 마케팅 도우미</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 90vh;
+            max-height: 800px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px 30px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .home-button {
+            position: absolute;
+            left: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .home-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-50%) translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 30px;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: flex-start;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 15px 20px;
+            border-radius: 18px;
+            word-wrap: break-word;
+            line-height: 1.5;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.assistant .message-content {
+            background: white;
+            color: #333;
+            border: 1px solid #e0e0e0;
+            border-bottom-left-radius: 4px;
+        }
+
+        /* 마크다운 스타일링 - 더 명확하게 */
+        .message-content h1 {
+            color: #667eea;
+            font-size: 24px;
+            font-weight: 700;
+            margin: 20px 0 15px 0;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 8px;
+        }
+
+        .message-content h2 {
+            color: #667eea;
+            font-size: 20px;
+            font-weight: 600;
+            margin: 18px 0 12px 0;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 6px;
+        }
+
+        .message-content h3 {
+            color: #667eea;
+            font-size: 18px;
+            font-weight: 600;
+            margin: 15px 0 10px 0;
+            border-bottom: 1px solid #667eea;
+            padding-bottom: 4px;
+        }
+
+        .message-content h4 {
+            color: #667eea;
+            font-size: 16px;
+            font-weight: 600;
+            margin: 12px 0 8px 0;
+        }
+
+        .message-content h5, .message-content h6 {
+            color: #667eea;
+            font-size: 14px;
+            font-weight: 600;
+            margin: 10px 0 6px 0;
+        }
+
+        .message-content ul, .message-content ol {
+            margin: 15px 0;
+            padding-left: 25px;
+        }
+
+        .message-content li {
+            margin: 8px 0;
+            line-height: 1.6;
+            font-size: 15px;
+        }
+
+        .message-content strong, .message-content b {
+            color: #667eea;
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .message-content em, .message-content i {
+            color: #764ba2;
+            font-style: italic;
+            font-weight: 500;
+        }
+
+        .message-content code {
+            background: #f0f0f0;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        .message-content blockquote {
+            border-left: 4px solid #667eea;
+            padding-left: 15px;
+            margin: 15px 0;
+            color: #666;
+            font-style: italic;
+        }
+
+        .message-content a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .message-content a:hover {
+            text-decoration: underline;
+        }
+
+        .message-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        .message-content th, .message-content td {
+            border: 1px solid #e0e0e0;
+            padding: 8px 12px;
+            text-align: left;
+        }
+
+        .message-content th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            margin: 0 10px;
+            flex-shrink: 0;
+        }
+
+        .message.user .message-avatar {
+            background: #667eea;
+        }
+
+        .message.assistant .message-avatar {
+            background: #f0f0f0;
+        }
+
+        .input-container {
+            padding: 20px 30px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-wrapper {
+            flex: 1;
+            position: relative;
+        }
+
+        #userInput {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 15px;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        #userInput:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        button {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            outline: none;
+        }
+
+        #sendBtn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        #sendBtn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        #sendBtn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        #resetBtn {
+            background: #f0f0f0;
+            color: #666;
+            padding: 15px 20px;
+        }
+
+        #resetBtn:hover {
+            background: #e0e0e0;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 10px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .loading-dots {
+            display: inline-block;
+        }
+
+        .loading-dots span {
+            animation: blink 0.8s infinite;
+            display: inline-block;
+            font-weight: bold;
+        }
+
+        .loading-dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .loading-dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        .typing-indicator {
+            background: #f0f0f0;
+            padding: 15px 20px;
+            border-radius: 18px;
+            border-bottom-left-radius: 4px;
+            margin-bottom: 20px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .typing-indicator.active {
+            display: flex;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #667eea;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+                opacity: 0.5;
+            }
+            30% {
+                transform: translateY(-10px);
+                opacity: 1;
+            }
+        }
+
+        @keyframes blink {
+            0%, 80%, 100% {
+                opacity: 0;
+            }
+            40% {
+                opacity: 1;
+            }
+        }
+
+        .welcome-message {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+
+        .welcome-message h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 28px;
+        }
+
+        .welcome-message p {
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+
+        .suggestions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .suggestion-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #e0e0e0;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .suggestion-card:hover {
+            border-color: #667eea;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .suggestion-card h3 {
+            font-size: 16px;
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+
+        .suggestion-card p {
+            font-size: 13px;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                height: 100vh;
+                max-height: none;
+                border-radius: 0;
+            }
+
+            .message-content {
+                max-width: 85%;
+            }
+
+            .header h1 {
+                font-size: 20px;
+            }
+
+            .suggestions {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button class="home-button" onclick="goHome()">
+                🏠 홈으로
+            </button>
+            <h1>🚀 성동구 소상공인 마케팅 도우미</h1>
+            <p>Powered by Google Gemini Flash 2.5</p>
+        </div>
+        
+        <div class="chat-container" id="chatContainer">
+            <div class="typing-indicator" id="typingIndicator">
+                <div class="message-avatar">🤖</div>
+                <div class="typing-dots">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            </div>
+            <div class="welcome-message" id="welcomeMessage">
+                <h2>안녕하세요! 👋</h2>
+                <p>성동구 지역 소상공인을 위한 마케팅 도우미입니다.</p>
+                <p>마케팅 전략, SNS 홍보, 고객 유치 등 무엇이든 물어보세요!</p>
+                
+                <div class="suggestions">
+                    <div class="suggestion-card" onclick="sendSuggestion('성동구 지역 특성에 맞는 마케팅 전략을 추천해주세요.')">
+                        <h3>📍 지역 마케팅</h3>
+                        <p>성동구 특성 기반 전략</p>
+                    </div>
+                    <div class="suggestion-card" onclick="sendSuggestion('소상공인이 효과적으로 활용할 수 있는 SNS 마케팅 방법을 알려주세요.')">
+                        <h3>📱 SNS 마케팅</h3>
+                        <p>인스타그램, 블로그 활용</p>
+                    </div>
+                    <div class="suggestion-card" onclick="sendSuggestion('저예산으로 할 수 있는 오프라인 홍보 방법을 추천해주세요.')">
+                        <h3>💡 저예산 홍보</h3>
+                        <p>효율적인 오프라인 전략</p>
+                    </div>
+                    <div class="suggestion-card" onclick="sendSuggestion('신규 고객을 유치하기 위한 이벤트 아이디어를 제안해주세요.')">
+                        <h3>🎉 이벤트 기획</h3>
+                        <p>고객 유치 아이디어</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="loading" id="loading">
+            <div class="loading-dots">
+                응답을 생성하고 있습니다<span>.</span><span>.</span><span>.</span>
+            </div>
+        </div>
+        
+        <div class="input-container">
+            <button id="resetBtn" onclick="resetChat()">🔄 초기화</button>
+            <div class="input-wrapper">
+                <input 
+                    type="text" 
+                    id="userInput" 
+                    placeholder="메시지를 입력하세요..."
+                    onkeypress="handleKeyPress(event)"
+                />
+            </div>
+            <button id="sendBtn" onclick="sendMessage()">전송</button>
+        </div>
+    </div>
+
+    <script>
+        const sessionId = 'session_' + Date.now();
+        let isProcessing = false;
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !isProcessing) {
+                sendMessage();
+            }
+        }
+
+        function sendSuggestion(message) {
+            document.getElementById('userInput').value = message;
+            sendMessage();
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const message = input.value.trim();
+            
+            if (!message || isProcessing) return;
+            
+            // 웰컴 메시지 숨기기
+            const welcomeMessage = document.getElementById('welcomeMessage');
+            if (welcomeMessage) {
+                welcomeMessage.style.display = 'none';
+            }
+            
+            // UI 업데이트
+            isProcessing = true;
+            input.value = '';
+            document.getElementById('sendBtn').disabled = true;
+            document.getElementById('typingIndicator').classList.add('active');
+            
+            // 사용자 메시지 표시
+            addMessage(message, 'user');
+            
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        session_id: sessionId
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    addMessage(data.response, 'assistant');
+                } else {
+                    addMessage('오류: ' + (data.error || '응답을 받을 수 없습니다.'), 'assistant');
+                }
+            } catch (error) {
+                addMessage('네트워크 오류가 발생했습니다. 다시 시도해주세요.', 'assistant');
+                console.error('Error:', error);
+            } finally {
+                isProcessing = false;
+                document.getElementById('sendBtn').disabled = false;
+                document.getElementById('typingIndicator').classList.remove('active');
+                input.focus();
+            }
+        }
+
+        function addMessage(text, sender) {
+            const chatContainer = document.getElementById('chatContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'message-avatar';
+            avatar.textContent = sender === 'user' ? '👤' : '🤖';
+            
+            const content = document.createElement('div');
+            content.className = 'message-content';
+            
+            // HTML로 렌더링 (마크다운 지원)
+            if (sender === 'assistant') {
+                // AI 응답은 HTML로 렌더링
+                content.innerHTML = text;
+            } else {
+                // 사용자 메시지는 텍스트로 표시
+                content.textContent = text;
+            }
+            
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(content);
+            chatContainer.appendChild(messageDiv);
+            
+            // 스크롤을 최하단으로
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        async function resetChat() {
+            if (!confirm('대화를 초기화하시겠습니까?')) return;
+            
+            try {
+                await fetch('/api/reset', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        session_id: sessionId
+                    })
+                });
+                
+                // 채팅 컨테이너 초기화
+                const chatContainer = document.getElementById('chatContainer');
+                chatContainer.innerHTML = `
+                    <div class="welcome-message" id="welcomeMessage">
+                        <h2>안녕하세요! 👋</h2>
+                        <p>성동구 지역 소상공인을 위한 마케팅 도우미입니다.</p>
+                        <p>마케팅 전략, SNS 홍보, 고객 유치 등 무엇이든 물어보세요!</p>
+                        
+                        <div class="suggestions">
+                            <div class="suggestion-card" onclick="sendSuggestion('성동구 지역 특성에 맞는 마케팅 전략을 추천해주세요.')">
+                                <h3>📍 지역 마케팅</h3>
+                                <p>성동구 특성 기반 전략</p>
+                            </div>
+                            <div class="suggestion-card" onclick="sendSuggestion('소상공인이 효과적으로 활용할 수 있는 SNS 마케팅 방법을 알려주세요.')">
+                                <h3>📱 SNS 마케팅</h3>
+                                <p>인스타그램, 블로그 활용</p>
+                            </div>
+                            <div class="suggestion-card" onclick="sendSuggestion('저예산으로 할 수 있는 오프라인 홍보 방법을 추천해주세요.')">
+                                <h3>💡 저예산 홍보</h3>
+                                <p>효율적인 오프라인 전략</p>
+                            </div>
+                            <div class="suggestion-card" onclick="sendSuggestion('신규 고객을 유치하기 위한 이벤트 아이디어를 제안해주세요.')">
+                                <h3>🎉 이벤트 기획</h3>
+                                <p>고객 유치 아이디어</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                alert('초기화 중 오류가 발생했습니다.');
+                console.error('Error:', error);
+            }
+        }
+
+        // 홈으로 가기 함수
+        function goHome() {
+            const chatContainer = document.getElementById('chatContainer');
+            const welcomeMessage = document.getElementById('welcomeMessage');
+            
+            // 채팅 히스토리 숨기기
+            const messages = chatContainer.querySelectorAll('.message');
+            messages.forEach(message => message.remove());
+            
+            // 웰컴 메시지 보이기
+            if (welcomeMessage) {
+                welcomeMessage.style.display = 'block';
+            }
+            
+            // 타이핑 인디케이터 숨기기
+            document.getElementById('typingIndicator').classList.remove('active');
+            
+            // 입력창에 포커스
+            document.getElementById('userInput').focus();
+        }
+
+        // 페이지 로드 시 입력창에 포커스
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('userInput').focus();
+        });
+    </script>
+</body>
+</html>
+
