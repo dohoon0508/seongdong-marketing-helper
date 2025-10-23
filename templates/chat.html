@@ -798,7 +798,7 @@
         </div>
         <div class="header-actions">
             <button class="btn btn-secondary" onclick="resetChat()">💬 대화 초기화</button>
-            <button class="btn btn-danger" onclick="goToSetup()">⚙️ 설정 변경</button>
+            <button class="btn btn-danger" onclick="goToSetup()">🏠 처음으로</button>
         </div>
     </div>
 
@@ -997,8 +997,40 @@
         }
 
         function goToSetup() {
-            if (confirm('설정을 변경하시겠습니까? 현재 대화는 저장되지 않습니다.')) {
-                window.location.href = '/setup';
+            console.log('처음으로 버튼 클릭됨');
+            
+            // 이미 setup 페이지에 있는지 확인
+            if (window.location.pathname === '/setup') {
+                console.log('이미 setup 페이지에 있습니다.');
+                return;
+            }
+            
+            if (confirm('처음부터 다시 시작하시겠습니까? 현재 대화와 설정이 모두 초기화됩니다.')) {
+                console.log('사용자 설정 초기화 중...');
+                
+                // 사용자 설정 초기화 API 호출
+                fetch('/api/reset-setup', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                }).then(response => {
+                    if (response.ok) {
+                        console.log('설정이 초기화되었습니다. setup 페이지로 이동합니다.');
+                        // 리다이렉트 전에 잠시 대기
+                        setTimeout(() => {
+                            window.location.href = '/setup';
+                        }, 100);
+                    } else {
+                        console.error('설정 초기화 실패');
+                        alert('설정 초기화에 실패했습니다. 다시 시도해주세요.');
+                    }
+                }).catch(error => {
+                    console.error('설정 초기화 오류:', error);
+                    alert('오류가 발생했습니다. 다시 시도해주세요.');
+                });
+            } else {
+                console.log('사용자가 취소를 눌렀습니다.');
             }
         }
 

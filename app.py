@@ -913,6 +913,28 @@ def get_setup():
     setup = user_setups.get('default', {})
     return jsonify(setup)
 
+@app.route('/api/reset-setup', methods=['POST'])
+def reset_setup():
+    """사용자 설정 초기화"""
+    try:
+        # 사용자 설정 초기화
+        user_setups['default'] = {}
+        
+        # 응답 캐시도 초기화
+        response_cache.clear()
+        
+        print("✅ 사용자 설정이 초기화되었습니다.")
+        return jsonify({
+            'message': '설정이 초기화되었습니다.',
+            'status': 'success'
+        })
+    except Exception as e:
+        print(f"❌ 설정 초기화 오류: {e}")
+        return jsonify({
+            'message': '설정 초기화에 실패했습니다.',
+            'status': 'error'
+        }), 500
+
 @app.route('/api/calendar-events', methods=['GET'])
 def get_calendar_events():
     """달력 이벤트 조회"""

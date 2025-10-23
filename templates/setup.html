@@ -475,8 +475,19 @@
                 const data = await response.json();
                 
                 if (data.is_setup) {
-                    // 이미 설정이 되어 있다면 대화 페이지로 이동
-                    window.location.href = '/chat';
+                    // 이미 설정이 되어 있다면 현재 설정값을 폼에 표시
+                    const setupInfo = data.setup_info;
+                    if (setupInfo) {
+                        if (setupInfo.location) {
+                            document.getElementById('location').value = setupInfo.location;
+                        }
+                        if (setupInfo.industry) {
+                            document.getElementById('industry').value = setupInfo.industry;
+                        }
+                        if (setupInfo.store_name) {
+                            document.getElementById('store_name').value = setupInfo.store_name;
+                        }
+                    }
                 }
             } catch (error) {
                 console.log('설정 확인 중 오류:', error);
