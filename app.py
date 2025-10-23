@@ -444,6 +444,22 @@ def chat():
         def get_system_prompt(menu_type=None):
             base_context = """당신은 성동구 지역 소상공인을 위한 전문 마케팅 도우미입니다.
 
+🎯 **핵심 역할**:
+- 신한카드 데이터 기반 근거 있는 마케팅 전략 제시
+- 지역별/업종별 맞춤형 솔루션 제공
+- 재현 가능하고 실행 가능한 구체적 조언
+
+📊 **필수 응답 구조**:
+1. **인사말**: "{지역} 지역의 {업종} 사장님을 위한 솔루션을 가져왔습니다."
+2. **근거 기반 분석**: 신한카드 데이터 인용과 함께 상권/업종 특성 분석
+3. **구체적 전략**: 실행 가능한 마케팅 전략 3-5가지 제시
+4. **출처 명시**: 모든 데이터와 규칙의 출처를 명확히 표기
+
+🔍 **데이터 활용 원칙**:
+- 신한카드분석.jsonl의 모든 인사이트와 규칙을 적극 활용
+- 상권별 특성, 고객층 분석, 시간대별 패턴을 반드시 반영
+- 업종별 적합도와 타겟 매칭 규칙을 적용
+
 성동구 지역 정보:
 - 성수동: 트렌디한 카페, 팝업스토어, 젊은 층 중심
 - 왕십리: 전통시장, 중앙시장, 전통과 현대 공존
@@ -533,9 +549,14 @@ def chat():
                 rag_context += f"\n📁 파일: {doc['filename']}\n"
                 rag_context += f"📋 내용: {doc['content']}\n"
                 rag_context += "---\n"
-            rag_context += "\n🔍 **중요**: 위 신한카드 데이터 분석 결과를 반드시 참고하여 구체적이고 데이터 기반의 마케팅 전략을 제안해주세요.\n"
-            rag_context += "💡 특히 상권별 특성, 고객층 분석, 시간대별 패턴, 업종별 인사이트를 활용하여 실무진이 바로 실행할 수 있는 전략을 제시해주세요.\n"
-            rag_context += "📊 **답변 형식**: 답변할 때는 반드시 '신한카드 데이터 정보를 바탕으로 말씀드리자면...', '분석 결과에 따르면...', '데이터에서 확인된 바에 따르면...' 등의 표현을 사용하여 데이터 출처를 명시해주세요.\n"
+            
+            # 강화된 프롬프트 엔지니어링 규칙
+            rag_context += "\n🔍 **필수 응답 규칙**:\n"
+            rag_context += "1. **근거 기반 제안**: 각 제안에 신한카드 데이터 근거(표/지표/규칙 등)를 함께 표기하세요.\n"
+            rag_context += "2. **출처 명시**: 신한카드분석.jsonl의 특정 레코드 ID나 데이터 소스를 반드시 인용하세요.\n"
+            rag_context += "3. **구체적 인용**: '신한카드 데이터에 따르면...', '[INS:fig1:analysis] 분석 결과...', '[RULE:fit:industry_event] 규칙에 의하면...' 등으로 출처를 명확히 하세요.\n"
+            rag_context += "4. **데이터 기반 전략**: 상권별 특성, 고객층 분석, 시간대별 패턴, 업종별 인사이트를 활용하여 실무진이 바로 실행할 수 있는 전략을 제시하세요.\n"
+            rag_context += "5. **재현 가능한 설명**: 동작 원리와 사용 흐름을 간단히 설명하여 재현 가능한 마케팅 전략을 제시하세요.\n"
         
         # 지역과 업종 정보를 포함한 컨텍스트 생성
         location_context = ""
@@ -547,11 +568,24 @@ def chat():
                 location_context += f"- 업종: {industry}\n"
             location_context += "위 정보를 고려하여 지역별, 업종별 맞춤형 조언을 제공해주세요.\n"
         
+        # 응답 시작 문구 생성
+        response_start = ""
+        if location and industry:
+            response_start = f"{location} 지역의 {industry} 사장님을 위한 솔루션을 가져왔습니다.\n\n"
+        elif location:
+            response_start = f"{location} 지역의 사장님을 위한 솔루션을 가져왔습니다.\n\n"
+        elif industry:
+            response_start = f"{industry} 사장님을 위한 솔루션을 가져왔습니다.\n\n"
+        
         # 첫 메시지에 시스템 컨텍스트와 RAG 컨텍스트 추가
         if len(chat.history) == 0:
             full_message = f"{system_context}{rag_context}{location_context}\n\n사용자: {user_message}"
         else:
             full_message = f"{rag_context}{location_context}\n\n사용자: {user_message}"
+        
+        # 응답 시작 문구를 프롬프트에 포함
+        if response_start:
+            full_message += f"\n\n**중요**: 응답을 반드시 '{response_start}'로 시작해야 합니다."
         
         # 캐시 확인 (자주 묻는 질문에 대한 빠른 응답)
         cache_key = user_message.lower().strip()
