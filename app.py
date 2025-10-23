@@ -123,7 +123,9 @@ def load_rag_documents():
                     content += f"총 라인 수: {len(lines)}\n\n"
                     content += "데이터 내용:\n"
                     
-                    for i, line in enumerate(lines):
+                    # Render 환경에서 메모리 최적화: 처음 10개 레코드만 처리
+                    max_records = 10
+                    for i, line in enumerate(lines[:max_records]):
                         if line.strip():  # 빈 줄이 아닌 경우만
                             try:
                                 data = json.loads(line.strip())
@@ -133,6 +135,9 @@ def load_rag_documents():
                                 content += "\n"
                             except json.JSONDecodeError:
                                 content += f"--- 레코드 {i+1} (JSON 파싱 오류) ---\n{line.strip()}\n\n"
+                    
+                    if len(lines) > max_records:
+                        content += f"... (총 {len(lines)}개 레코드 중 {max_records}개만 표시)\n"
                         
                 elif file_path.suffix.lower() == '.ipynb':
                     # Jupyter Notebook 파일 처리
@@ -288,11 +293,17 @@ def search_relevant_documents(query, max_docs=3):
     relevant_docs.sort(key=lambda x: x['relevance_score'], reverse=True)
     return relevant_docs[:max_docs]
 
-# 앱 시작 시 RAG 문서 로드 및 인덱스 구축
-rag_documents = load_rag_documents()
-document_index = build_document_index()
-print(f"📚 문서 로드 완료: {len(rag_documents)}개")
-print(f"🔍 인덱스 구축 완료: {len(document_index['keywords'])}개 키워드")
+# 앱 시작 시 RAG 문서 로드 및 인덱스 구축 (Render 환경에서 지연 로딩)
+try:
+    rag_documents = load_rag_documents()
+    document_index = build_document_index()
+    print(f"📚 문서 로드 완료: {len(rag_documents)}개")
+    print(f"🔍 인덱스 구축 완료: {len(document_index['keywords'])}개 키워드")
+except Exception as e:
+    print(f"⚠️ 문서 로딩 중 오류 발생: {e}")
+    print("🔄 지연 로딩으로 전환합니다.")
+    rag_documents = {}
+    document_index = {'keywords': {}, 'categories': {}, 'entities': {}}
 
 @app.route('/api/reload-documents', methods=['POST'])
 def reload_documents():
@@ -743,7 +754,20 @@ def get_calendar_events():
 @app.route('/health', methods=['GET'])
 def health_check():
     """헬스체크 엔드포인트"""
-    return jsonify({'status': 'ok', 'service': 'seongdong-marketing-helper'}), 200
+    try:
+        return jsonify({
+            'status': 'healthy',
+            'timestamp': datetime.now().isoformat(),
+            'service': 'seongdong-marketing-helper',
+            'documents_loaded': len(rag_documents) if rag_documents else 0
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'timestamp': datetime.now().isoformat(),
+            'service': 'seongdong-marketing-helper',
+            'error': str(e)
+        }), 500
 
 if __name__ == '__main__':
     import os

@@ -1,1 +1,1 @@
-web: gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --threads 8 --timeout 120 --graceful-timeout 30 --max-requests 100 --max-requests-jitter 20 --keep-alive 30 --access-logfile - --error-logfile - --log-level info
+web: gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --threads 2 --timeout 60 --graceful-timeout 30 --max-requests 50 --max-requests-jitter 10 --keep-alive 15 --access-logfile - --error-logfile - --log-level info --preload
