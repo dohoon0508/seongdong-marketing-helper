@@ -44,12 +44,18 @@ _rag_documents = None
 _document_index = None
 _response_cache = {}
 
+# 전역 변수들
+rag_documents = {}
+document_index = {}
+response_cache = {}
+
 def get_rag_documents():
     """지연 로딩으로 RAG 문서 가져오기"""
-    global _rag_documents
+    global _rag_documents, rag_documents
     if _rag_documents is None:
         print("📚 RAG 문서 로딩 시작...")
         _rag_documents = load_rag_documents()
+        rag_documents = _rag_documents  # 전역 변수도 업데이트
         print(f"📚 문서 로드 완료: {len(_rag_documents)}개")
     return _rag_documents
 
@@ -70,10 +76,10 @@ def load_rag_documents():
     # documents/raw 폴더의 모든 파일 찾기
     raw_folder = Path('documents/raw')
     if not raw_folder.exists():
-        return
+        return rag_documents
     
     # 지원하는 파일 형식
-    supported_extensions = ['.txt', '.md', '.csv', '.json', '.ipynb']
+    supported_extensions = ['.txt', '.md', '.csv', '.json', '.jsonl', '.ipynb']
     
     for file_path in raw_folder.glob('*'):
         if file_path.suffix.lower() in supported_extensions:
@@ -104,6 +110,29 @@ def load_rag_documents():
                     # JSON 파일 처리
                     with open(file_path, 'r', encoding='utf-8') as f:
                         content = f.read()
+                        
+                elif file_path.suffix.lower() == '.jsonl':
+                    # JSONL 파일 처리
+                    import json
+                    content = f"파일명: {file_path.name}\n\n"
+                    content += f"데이터 형태: JSONL (JSON Lines)\n\n"
+                    
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        lines = f.readlines()
+                    
+                    content += f"총 라인 수: {len(lines)}\n\n"
+                    content += "데이터 내용:\n"
+                    
+                    for i, line in enumerate(lines):
+                        if line.strip():  # 빈 줄이 아닌 경우만
+                            try:
+                                data = json.loads(line.strip())
+                                content += f"--- 레코드 {i+1} ---\n"
+                                for key, value in data.items():
+                                    content += f"{key}: {value}\n"
+                                content += "\n"
+                            except json.JSONDecodeError:
+                                content += f"--- 레코드 {i+1} (JSON 파싱 오류) ---\n{line.strip()}\n\n"
                         
                 elif file_path.suffix.lower() == '.ipynb':
                     # Jupyter Notebook 파일 처리
@@ -137,6 +166,8 @@ def load_rag_documents():
             except Exception as e:
                 print(f"파일 로드 오류 {file_path.name}: {e}")
                 continue
+    
+    return rag_documents
 
 def build_document_index():
     """문서 인덱스 구축 (키워드, 카테고리, 개체명 추출)"""
@@ -159,6 +190,8 @@ def build_document_index():
         if category not in document_index['categories']:
             document_index['categories'][category] = []
         document_index['categories'][category].append(filename)
+    
+    return document_index
 
 def extract_keywords(text):
     """텍스트에서 중요한 키워드 추출"""
@@ -187,13 +220,29 @@ def search_relevant_documents(query, max_docs=3):
     rag_documents = get_rag_documents()
     document_index = get_document_index()
     
-    if not rag_documents:
+    if not rag_documents or rag_documents is None:
         return []
     
     query_lower = query.lower()
     relevant_docs = []
     
-    # 1. 키워드 기반 검색 (인덱스 활용)
+    # 1. 신한카드분석.jsonl 파일 우선 처리
+    shinhan_file = None
+    for filename in rag_documents.keys():
+        if '신한카드분석.jsonl' in filename:
+            shinhan_file = filename
+            break
+    
+    # 신한카드 관련 질문인 경우 신한카드분석.jsonl을 최우선으로 포함
+    if shinhan_file and ('신한카드' in query_lower or '분석' in query_lower or '데이터' in query_lower):
+        doc_info = rag_documents[shinhan_file]
+        relevant_docs.append({
+            'filename': shinhan_file,
+            'content': doc_info['content'][:2000],  # 신한카드 파일은 더 많은 문자 사용
+            'relevance_score': 100  # 최고 우선순위
+        })
+    
+    # 2. 키워드 기반 검색 (인덱스 활용)
     candidate_files = set()
     for keyword in query_lower.split():
         if keyword in document_index['keywords']:
@@ -222,6 +271,10 @@ def search_relevant_documents(query, max_docs=3):
                 if keyword in filename.lower():
                     relevance_score += 2
             
+            # 신한카드분석.jsonl 파일에 추가 가중치
+            if '신한카드분석.jsonl' in filename:
+                relevance_score += 50
+            
             # 신한카드 데이터는 더 많은 문자 사용 (제한 강화)
             max_chars = 2000 if '신한카드' in filename.lower() or 'shinhan' in filename.lower() else 500
             
@@ -236,8 +289,8 @@ def search_relevant_documents(query, max_docs=3):
     return relevant_docs[:max_docs]
 
 # 앱 시작 시 RAG 문서 로드 및 인덱스 구축
-load_rag_documents()
-build_document_index()
+rag_documents = load_rag_documents()
+document_index = build_document_index()
 print(f"📚 문서 로드 완료: {len(rag_documents)}개")
 print(f"🔍 인덱스 구축 완료: {len(document_index['keywords'])}개 키워드")
 
@@ -274,7 +327,7 @@ def load_event_data():
     
     try:
         # 성동구 공통 이벤트 데이터 로드
-        common_events_df = pd.read_csv('documents/raw/성동구 공통_한양대_흥행영화 이벤트 DB2.csv', encoding='utf-8')
+        common_events_df = pd.read_csv('documents/raw/성동구 공통_한양대_흥행영화 이벤트 DB.csv', encoding='utf-8')
         
         for _, row in common_events_df.iterrows():
             start_date = pd.to_datetime(row['Start_Date'], format='%Y.%m.%d', errors='coerce')
@@ -316,7 +369,7 @@ def load_event_data():
     
     try:
         # 성수 팝업 데이터 로드
-        popup_events_df = pd.read_csv('documents/raw/성수 팝업 최종2.csv', encoding='utf-8')
+        popup_events_df = pd.read_csv('documents/raw/성수 팝업 최종.csv', encoding='utf-8')
         
         for _, row in popup_events_df.iterrows():
             start_date = pd.to_datetime(row['Start_Date'], format='%Y.%m.%d', errors='coerce')
@@ -369,6 +422,12 @@ def chat():
         
         # 세션별 채팅 히스토리 관리
         if session_id not in chat_sessions:
+            model = get_model()
+            if model is None:
+                return jsonify({
+                    'message': '❌ Google API Key가 설정되지 않았습니다. 관리자에게 문의하세요.',
+                    'status': 'error'
+                }), 500
             chat_sessions[session_id] = model.start_chat(history=[])
         
         chat = chat_sessions[session_id]
@@ -641,7 +700,9 @@ Google API 사용량이 한도를 초과했습니다.
         })
     
     except Exception as e:
+        import traceback
         print(f"Error: {str(e)}")
+        print(f"Traceback: {traceback.format_exc()}")
         return jsonify({'error': f'오류가 발생했습니다: {str(e)}'}), 500
 
 @app.route('/api/test-gemini', methods=['GET'])

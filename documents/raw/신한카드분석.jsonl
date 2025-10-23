@@ -1,0 +1,23 @@
+{"id":"PIPE:load:001","doc_type":"pipeline","title":"데이터 적재","body":"내부 데이터(가맹점/거래요약): ENCODED_MCT, 주소, 상권명, 업종명, 개설일, 운영개월, 매출비율, 성별·연령 분포, 거주/직장/유동 비율. 외부 이벤트 CSV: Event_ID, Event_Type(팝업/전시/축제/명절/영화/날씨), 기간, 지역, 타깃, 설명.","tags":["pipeline","데이터적재"],"version":"rag-v1"}
+{"id":"PIPE:clean:001","doc_type":"pipeline","title":"정제·정규화","body":"주소→좌표 변환, 상권명 표준화, 날짜형 변환, 결측치 처리. 성수·왕십리·뚝섬 등 표준 상권명 유지.","tags":["정제","정규화"],"version":"rag-v1"}
+{"id":"PIPE:feature:001","doc_type":"pipeline","title":"파생변수 생성","body":"operating_months_bucket(신규/안정/성숙), main_customer, flow_share, is_delivery_major, market_strength 생성.","tags":["파생변수","feature"],"version":"rag-v1"}
+{"id":"INS:fig1:top_industry","doc_type":"insight","title":"업종별 가맹점 Top15","body":"한식·육류/고기, 백반/가정식, 카페, 단품요리, 축산물, 커피전문점, 양식, 식료품, 치킨, 베이커리, 분식, 일식, 해물, 중식, 호프.","tags":["업종","분포"],"version":"rag-v1"}
+{"id":"INS:fig1:top_district","doc_type":"insight","title":"상권별 가맹점 Top15","body":"성수, 왕십리, 뚝섬, 한양대, 마장동, 금남시장, 답십리, 옥수, 신금호, 행당, 장한평, 압구정로데오, 풍산지구, 화양시장, 방배역.","tags":["상권","분포"],"version":"rag-v1"}
+{"id":"INS:fig1:analysis","doc_type":"insight","title":"상권·업종 해석","body":"성수·왕십리·뚝섬이 핵심 대형상권. 식사+카페 복합지역. 성수/왕십리=브런치·UGC형, 마장동=명절·단체형, 한양대=대학가·야간형.","tags":["분석","상권전략"],"version":"rag-v1"}
+{"id":"INS:fig2:customers","doc_type":"insight","title":"업종별 주요 고객층","body":"카페/커피전문점/베이커리=여성20~30대. 한식·육류=남성30~50대. 양식·일식=직장인/커플20~30. 치킨·분식=10~30대 혼재.","tags":["고객","성별연령"],"version":"rag-v1"}
+{"id":"INS:fig3:new_vs_return","doc_type":"insight","title":"신규 vs 재방문 고객 비율","body":"대부분 신규0~20%, 재방문5~40%. 신규↓재방문↓=인지강화, 신규↑재방문↓=트라이얼, 신규↓재방문↑=단골화, 둘다↑=프리미엄.","tags":["고객","재방문"],"version":"rag-v1"}
+{"id":"INS:fig4:delivery","doc_type":"insight","title":"배달여부와 매출 순위","body":"배달 중심 점포가 매출 순위 상위. 악천후엔 배달/픽업 강화, 비배달은 한정세트로 방어.","tags":["배달","매출"],"version":"rag-v1"}
+{"id":"INS:fig5:trend","doc_type":"insight","title":"월별 매출 트렌드","body":"한식·육류=상위권 유지, 치킨=하반기 개선. 시즌성 반영(봄벚꽃, 여름휴가, 명절, 연말)에 맞춰 세트·오퍼 차등.","tags":["트렌드","시즌"],"version":"rag-v1"}
+{"id":"RULE:filter:time_space","doc_type":"rule","title":"시간·거리 필터","body":"이벤트 기간이 겹치고 동일 상권 또는 반경 radius_m 이내만 추천 후보.","tags":["filter","이벤트"],"version":"rag-v1"}
+{"id":"RULE:fit:industry_event","doc_type":"rule","title":"업종×이벤트 적합도","body":"팝업·전시=카페·디저트·브런치·주점 가점. 대학축제·시험=카페·치킨·분식·주점. 영화개봉=카페·주점·치킨. 명절=한식·정육·반찬·베이커리.","tags":["이벤트적합도"],"version":"rag-v1"}
+{"id":"RULE:target_match","doc_type":"rule","title":"타겟 매칭","body":"Target_Audience vs gender_mix+age_main 유사도 높을수록 가점. 예: 여성20~30↑이면 카페/베이커리 가점.","tags":["타겟","매칭"],"version":"rag-v1"}
+{"id":"RULE:flow_branch","doc_type":"rule","title":"고객 흐름별 분기","body":"residential↑=단골/예약형, floating↑=회전/오퍼, office↑=점심/단체/주류.","tags":["고객흐름"],"version":"rag-v1"}
+{"id":"RULE:lifecycle","doc_type":"rule","title":"생애주기별 전술","body":"신규·하위권=인지 중심, 성숙·상위권=수익성 중심. 인지도→오퍼/콜라보, 성숙→브랜딩/예약.","tags":["생애주기"],"version":"rag-v1"}
+{"id":"RULE:weather","doc_type":"rule","title":"날씨 보정","body":"비/폭염/한파 시 배달·픽업·실내 체류 강화, 재료·스태프 배치 가이드.","tags":["날씨","보정"],"version":"rag-v1"}
+{"id":"STRAT:recipe:seongsu:cafe","doc_type":"recipe","title":"성수 카페 전략","body":"팝업Top3 연계, 한정메뉴+포토카드, 릴스30초 플로우, KPI:방문수·UGC·세트판매, 예산:중.","districts":["성수"],"industries":["카페"],"customer_core":"여성20~30","tags":["성수","카페","팝업"],"version":"rag-v1"}
+{"id":"STRAT:recipe:majang:koreanbbq","doc_type":"recipe","title":"마장동 한식·육류 명절플랜","body":"명절D-14~D0 선주문/리마인드/픽업관리. KPI:선주문수·객단가·재방문.","districts":["마장동"],"industries":["한식","육류"],"lifecycle":"성숙","tags":["명절","선주문"],"version":"rag-v1"}
+{"id":"STRAT:recipe:hanyang:cafe_chicken","doc_type":"recipe","title":"한양대 카페/치킨 시험주간","body":"밤샘스터디세트, 2차쿠폰자동발급, 좌석예약, KPI:야간매출·예약수·2회전환.","districts":["한양대"],"industries":["카페","치킨"],"tags":["대학가","시험주간"],"version":"rag-v1"}
+{"id":"STRAT:recipe:wangsimni:pub","doc_type":"recipe","title":"왕십리 주점 영화개봉 연계","body":"티켓인증업셀, 심야안주세트, 21시이후혜택, KPI:심야매출·티켓인증수.","districts":["왕십리"],"industries":["주점"],"tags":["영화개봉","업셀"],"version":"rag-v1"}
+{"id":"SCHEMA:event","doc_type":"schema","title":"이벤트/팝업 스키마","body":"Event_ID, Event_Name, Event_Type, Start_Date, End_Date, Location, District, Target_Audience, Description","tags":["schema","event"],"version":"rag-v1"}
+{"id":"SCORING:v1","doc_type":"scoring","title":"추천 점수식","body":"score = 2*region_match + 2*type_category_fit + 1*date_proximity + 1*target_match + 1*flow_rule + 0.5*weather_adjust + 1*lifecycle_competitiveness","tags":["scoring"],"version":"rag-v1"}
+{"id":"FORMAT:answer:v1","doc_type":"format","title":"응답 포맷","body":"요약→Top3전략카드(왜/무엇/어떻게/언제/예산/KPI/출처Event_ID)→체크리스트→(선택)JSON액션","tags":["format","응답"],"version":"rag-v1"}
