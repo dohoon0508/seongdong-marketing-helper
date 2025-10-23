@@ -651,9 +651,12 @@ def health_check():
 if __name__ == '__main__':
     import os
     port = int(os.environ.get('PORT', 8080))
+    print(f"🚀 Flask 서버 시작: 0.0.0.0:{port}")
+    print(f"📊 환경변수 PORT: {os.environ.get('PORT', 'Not set')}")
     app.run(debug=False, host='0.0.0.0', port=port)
 else:
     # Render에서 Gunicorn으로 실행될 때는 이 부분이 실행되지 않음
     # Gunicorn이 직접 app 객체를 import하여 사용
+    print("🔧 Gunicorn 모드로 실행 중...")
     pass
 

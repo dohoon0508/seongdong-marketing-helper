@@ -132,3 +132,39 @@ python app.py
 - ✅ **Secret으로 설정**: Render에서 API Key를 Secret으로 설정
 - ✅ **환경변수 사용**: 코드에 직접 하드코딩하지 않음
 - ✅ **정기 갱신**: 보안을 위해 정기적으로 API Key 갱신
+
+## 🚀 Render 포트 바인딩 문제 해결
+
+### 1. 포트 바인딩 오류
+- **오류**: `Detected service running on port 10000` (포트 불일치)
+- **원인**: `render.yaml`에서 `PORT: 10000` 하드코딩
+- **해결**: Render 자동 `$PORT` 환경변수 사용
+
+### 2. 올바른 설정
+```yaml
+# render.yaml (올바른 설정)
+envVars:
+  - key: GOOGLE_API_KEY
+    sync: false
+  - key: FLASK_ENV
+    value: production
+# PORT는 Render가 자동으로 제공하므로 제거
+```
+
+### 3. Gunicorn 설정
+```bash
+# Procfile
+web: gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 60 --access-logfile - --error-logfile -
+```
+
+### 4. 성공 로그 확인
+```
+✅ Service running on port 10000... PORT: 10000
+✅ Service ready
+```
+
+### 5. 문제 해결 체크리스트
+- ✅ **PORT 환경변수**: Render 자동 제공 사용
+- ✅ **Gunicorn 바인딩**: `0.0.0.0:$PORT` 사용
+- ✅ **로그 확인**: Render Dashboard → Logs
+- ✅ **헬스체크**: `/health` 엔드포인트 확인
