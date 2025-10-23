@@ -12,81 +12,132 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #ffffff;
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                linear-gradient(45deg, transparent 0%, rgba(0, 0, 0, 0.02) 50%, transparent 100%);
+            pointer-events: none;
+            z-index: -1;
         }
 
         .container {
             width: 100%;
             max-width: 1200px;
-            background: transparent;
-            border-radius: 0;
-            box-shadow: none;
-            overflow: visible;
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            border: 1px solid #e9ecef;
             display: flex;
             flex-direction: column;
             min-height: 100vh;
-            padding: 20px;
+            padding: 0;
         }
 
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #4A90E2 0%, #6BB6FF 100%);
             color: white;
-            padding: 25px 30px;
+            padding: 32px 40px;
             text-align: center;
-            box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 4px 16px rgba(74, 144, 226, 0.3);
             position: relative;
-            border-radius: 20px;
-            margin-bottom: 20px;
+            border-radius: 0;
+            margin-bottom: 0;
+            overflow: hidden;
         }
 
 
         .header h1 {
             font-size: 24px;
             font-weight: 600;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
+            color: white;
         }
 
         .header p {
             font-size: 14px;
             opacity: 0.9;
+            font-weight: 400;
+            color: #ecf0f1;
         }
 
         .chat-container {
             flex: 1;
             overflow-y: auto;
-            padding: 30px;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
+            padding: 0;
+            background: #ffffff;
+            border-radius: 0;
+            box-shadow: none;
+            margin-bottom: 0;
+            position: relative;
+            display: flex;
+            flex-direction: column;
         }
 
         /* 달력 섹션 스타일 */
         .calendar-section {
-            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-            border-radius: 20px;
-            padding: 25px;
-            margin-bottom: 25px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(10px);
+            background: #f8f9fa;
+            border-radius: 0;
+            padding: 24px;
+            margin-bottom: 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        /* 채팅 영역 스타일 */
+        .chat-section {
+            background: #ffffff;
+            padding: 32px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-section-header {
+            background: linear-gradient(135deg, #4A90E2 0%, #6BB6FF 100%);
+            color: white;
+            padding: 18px 28px;
+            margin: -32px -32px 24px -32px;
+            border-radius: 0;
+            font-size: 18px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 16px rgba(74, 144, 226, 0.3);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
         .calendar-header-section h2 {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 20px;
-            font-size: 24px;
+            color: #4A90E2;
+            margin: 0;
+            font-size: 22px;
             text-align: center;
             font-weight: 700;
+            text-shadow: 0 2px 4px rgba(74, 144, 226, 0.2);
         }
 
         .calendar-controls {
@@ -105,30 +156,29 @@
         }
 
         .nav-button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #4A90E2 0%, #6BB6FF 100%);
             color: white;
             border: none;
-            padding: 10px 16px;
-            border-radius: 25px;
+            padding: 10px 20px;
+            border-radius: 8px;
             cursor: pointer;
             font-size: 14px;
             font-weight: 600;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
         }
 
         .nav-button:hover {
+            background: linear-gradient(135deg, #357ABD 0%, #4A90E2 100%);
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 6px 16px rgba(74, 144, 226, 0.4);
         }
 
         .current-month {
             font-size: 20px;
             font-weight: 700;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: #4A90E2;
+            text-shadow: 0 2px 4px rgba(74, 144, 226, 0.2);
         }
 
         .event-filters {
@@ -139,83 +189,153 @@
         }
 
         .filter-button {
-            padding: 8px 16px;
-            border: 2px solid transparent;
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            color: #6c757d;
-            border-radius: 20px;
+            padding: 10px 20px;
+            border: 1px solid #B3D9FF;
+            background: linear-gradient(135deg, #E3F2FD 0%, #ffffff 100%);
+            color: #4A90E2;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 12px;
+            font-size: 14px;
             font-weight: 600;
             transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.15);
         }
 
         .filter-button:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            background: linear-gradient(135deg, #B3D9FF 0%, #E3F2FD 100%);
+            border-color: #4A90E2;
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.25);
+            transform: translateY(-2px);
         }
 
         .filter-button.active {
+            background: linear-gradient(135deg, #4A90E2 0%, #6BB6FF 100%);
+            color: white;
+            border-color: #4A90E2;
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.4);
+        }
+
+        /* 문서 관리 스타일 */
+        .document-management {
+            margin-top: 20px;
+            padding: 15px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .document-management h4 {
+            margin: 0 0 10px 0;
+            color: #495057;
+            font-size: 14px;
+        }
+
+        .doc-actions {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .doc-button {
+            padding: 6px 12px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            border-color: transparent;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .doc-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .document-list {
+            background: white;
+            border-radius: 8px;
+            padding: 10px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .document-item {
+            padding: 8px;
+            margin: 4px 0;
+            background: #f8f9fa;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #495057;
+        }
+
+        /* 달력 컨테이너 */
+        .calendar-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 12px;
+            padding: 28px;
+            box-shadow: 0 6px 20px rgba(74, 144, 226, 0.15);
+            border: 2px solid #B3D9FF;
+            margin-top: 20px;
         }
 
         .calendar-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 8px;
-            background: transparent;
-            border-radius: 12px;
-            padding: 10px;
+            gap: 3px;
+            background: linear-gradient(135deg, #E3F2FD 0%, #B3D9FF 100%);
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid #B3D9FF;
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.1);
         }
 
         .calendar-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #4A90E2 0%, #6BB6FF 100%);
             color: white;
-            padding: 12px 8px;
+            padding: 16px 8px;
             text-align: center;
-            font-weight: 600;
-            font-size: 12px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+            font-weight: 700;
+            font-size: 14px;
+            border-bottom: 1px solid #357ABD;
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
         }
 
         .calendar-day {
-            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-            min-height: 80px;
-            padding: 10px;
-            border: none;
-            border-radius: 10px;
+            background: #ffffff;
+            min-height: 150px;
+            padding: 12px;
+            border-right: 1px solid #e9ecef;
+            border-bottom: 1px solid #e9ecef;
             position: relative;
             cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-            overflow: visible;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            max-height: 200px;
         }
 
         .calendar-day:hover {
-            background: linear-gradient(135deg, #f0f4ff 0%, #e8f2ff 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+            background: #e3f2fd;
+            box-shadow: inset 0 0 0 2px #1976d2;
         }
 
         .calendar-day.other-month {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            background: #f8f9fa;
             color: #adb5bd;
-            opacity: 0.6;
         }
 
         .calendar-day.today {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            color: #1976d2;
+            border: 2px solid #1976d2;
+            box-shadow: 0 2px 8px rgba(25, 118, 210, 0.2);
         }
 
         .calendar-day.today .day-number {
-            color: white;
+            color: #1976d2;
             font-weight: 700;
         }
 
@@ -223,108 +343,133 @@
             font-weight: 600;
             font-size: 14px;
             margin-bottom: 4px;
-            color: #2c3e50;
+            color: #333;
         }
 
         .holiday {
             color: #e74c3c;
-            font-weight: 700;
+            font-weight: 600;
             font-size: 9px;
             background: rgba(231, 76, 60, 0.1);
             padding: 2px 4px;
-            border-radius: 4px;
+            border-radius: 3px;
             display: inline-block;
-            margin-bottom: 2px;
+            margin-bottom: 3px;
         }
 
-        .event-item {
-            font-size: 8px;
-            padding: 3px 6px;
-            margin: 2px 0;
-            border-radius: 6px;
+        /* 연속 이벤트 오버레이 막대 */
+        .continuous-event-bar {
+            position: absolute;
+            height: 18px;
+            background: #3498db;
+            border-radius: 4px;
             color: white;
+            font-size: 8px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
+            transition: all 0.2s ease;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-            font-weight: 500;
+            z-index: 10;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-            transition: all 0.2s ease;
-            position: relative;
         }
 
-        /* 연속 이벤트 표시를 위한 스타일 */
-        .event-item.continuous-start {
+        .continuous-event-bar:hover {
+            opacity: 0.8;
+            transform: scaleY(1.05);
+        }
+
+        .continuous-event-bar.start {
             border-top-left-radius: 6px;
             border-bottom-left-radius: 6px;
             border-top-right-radius: 0;
             border-bottom-right-radius: 0;
-            margin-right: -2px;
-            z-index: 2;
         }
 
-        .event-item.continuous-middle {
+        .continuous-event-bar.middle {
             border-radius: 0;
-            margin-left: -2px;
-            margin-right: -2px;
-            z-index: 1;
         }
 
-        .event-item.continuous-end {
+        .continuous-event-bar.end {
             border-top-left-radius: 0;
             border-bottom-left-radius: 0;
             border-top-right-radius: 6px;
             border-bottom-right-radius: 6px;
-            margin-left: -2px;
-            z-index: 2;
         }
 
-        .event-item.continuous-single {
+        .continuous-event-bar.single {
             border-radius: 6px;
         }
 
-        .event-item:hover {
-            transform: scale(1.05);
+        /* 단일 이벤트 바 */
+        .event-bar {
+            height: 20px;
+            margin: 3px 0;
+            border-radius: 6px;
+            color: white;
+            font-size: 9px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        .event-bar:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
         }
 
         .event-general {
-            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            background: linear-gradient(135deg, #3498db, #2980b9);
         }
 
         .event-popup {
-            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
         }
 
         .event-university {
-            background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
         }
 
         .event-movie {
-            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            background: linear-gradient(135deg, #f39c12, #e67e22);
         }
 
         .event-more {
-            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+            background: linear-gradient(135deg, #6c757d, #5a6268);
             text-align: center;
             font-weight: 600;
         }
 
         .message {
-            margin-bottom: 20px;
+            margin-bottom: 24px;
             display: flex;
             align-items: flex-start;
-            animation: fadeIn 0.3s ease-in;
+            gap: 16px;
+            animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            z-index: 1;
         }
 
         @keyframes fadeIn {
             from {
                 opacity: 0;
-                transform: translateY(10px);
+                transform: translateY(20px) scale(0.95);
             }
             to {
                 opacity: 1;
-                transform: translateY(0);
+                transform: translateY(0) scale(1);
             }
         }
 
@@ -332,67 +477,98 @@
             flex-direction: row-reverse;
         }
 
+        .message-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: transform 0.3s ease;
+        }
+
+        .message-avatar:hover {
+            transform: scale(1.05);
+        }
+
+        .message.user .message-avatar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .message.assistant .message-avatar {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
         .message-content {
-            max-width: 70%;
-            padding: 15px 20px;
-            border-radius: 18px;
+            max-width: 75%;
+            padding: 18px 24px;
+            border-radius: 24px;
             word-wrap: break-word;
-            line-height: 1.5;
+            line-height: 1.7;
+            font-size: 15px;
+            position: relative;
+            backdrop-filter: blur(10px);
         }
 
         .message.user .message-content {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #4A90E2 0%, #6BB6FF 100%);
             color: white;
-            border-bottom-right-radius: 4px;
+            border-bottom-right-radius: 8px;
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
         }
 
         .message.assistant .message-content {
-            background: white;
-            color: #333;
-            border: 1px solid #e0e0e0;
-            border-bottom-left-radius: 4px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            color: #2c3e50;
+            border: 1px solid #B3D9FF;
+            border-bottom-left-radius: 8px;
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.15);
         }
 
-        /* 마크다운 스타일링 - 더 명확하게 */
+        /* 마크다운 스타일링 - 미니멀 */
         .message-content h1 {
-            color: #667eea;
-            font-size: 24px;
-            font-weight: 700;
-            margin: 20px 0 15px 0;
-            border-bottom: 3px solid #667eea;
-            padding-bottom: 8px;
-        }
-
-        .message-content h2 {
-            color: #667eea;
+            color: #2c3e50;
             font-size: 20px;
             font-weight: 600;
-            margin: 18px 0 12px 0;
-            border-bottom: 2px solid #667eea;
+            margin: 16px 0 12px 0;
+            border-bottom: 2px solid #2c3e50;
             padding-bottom: 6px;
         }
 
-        .message-content h3 {
-            color: #667eea;
+        .message-content h2 {
+            color: #2c3e50;
             font-size: 18px;
             font-weight: 600;
-            margin: 15px 0 10px 0;
-            border-bottom: 1px solid #667eea;
+            margin: 14px 0 10px 0;
+            border-bottom: 1px solid #2c3e50;
             padding-bottom: 4px;
         }
 
-        .message-content h4 {
-            color: #667eea;
+        .message-content h3 {
+            color: #2c3e50;
             font-size: 16px;
             font-weight: 600;
             margin: 12px 0 8px 0;
         }
 
-        .message-content h5, .message-content h6 {
-            color: #667eea;
+        .message-content h4 {
+            color: #2c3e50;
             font-size: 14px;
             font-weight: 600;
             margin: 10px 0 6px 0;
+        }
+
+        .message-content h5, .message-content h6 {
+            color: #2c3e50;
+            font-size: 13px;
+            font-weight: 600;
+            margin: 8px 0 4px 0;
         }
 
         .message-content ul, .message-content ol {
@@ -496,38 +672,51 @@
 
         #userInput {
             width: 100%;
-            padding: 15px 20px;
-            border: 2px solid #e0e0e0;
-            border-radius: 25px;
+            padding: 14px 18px;
+            border: 2px solid #B3D9FF;
+            border-radius: 8px;
             font-size: 15px;
             outline: none;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            color: #2c3e50;
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.15);
         }
 
         #userInput:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            border-color: #4A90E2;
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+            background: #ffffff;
+        }
+
+        #userInput::placeholder {
+            color: #B3D9FF;
+            font-weight: 500;
         }
 
         button {
-            padding: 15px 30px;
-            border: none;
-            border-radius: 25px;
-            font-size: 15px;
-            font-weight: 600;
+            padding: 12px 24px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.2s ease;
             outline: none;
         }
 
         #sendBtn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #4A90E2 0%, #6BB6FF 100%);
             color: white;
+            border-color: #4A90E2;
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
         }
 
         #sendBtn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #357ABD 0%, #4A90E2 100%);
+            border-color: #357ABD;
+            box-shadow: 0 6px 16px rgba(74, 144, 226, 0.4);
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
         }
 
         #sendBtn:disabled {
@@ -536,13 +725,17 @@
         }
 
         #resetBtn {
-            background: #f0f0f0;
-            color: #666;
-            padding: 15px 20px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            color: #2c3e50;
+            border-color: #B3D9FF;
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.15);
         }
 
         #resetBtn:hover {
-            background: #e0e0e0;
+            background: linear-gradient(135deg, #E3F2FD 0%, #B3D9FF 100%);
+            border-color: #4A90E2;
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.25);
+            transform: translateY(-1px);
         }
 
         .loading {
@@ -555,6 +748,196 @@
 
         .loading.active {
             display: block;
+        }
+
+        /* 이벤트 모달 스타일 */
+        .event-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .event-modal-overlay.show {
+            opacity: 1;
+        }
+
+        .event-modal-container {
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            border: 1px solid #e9ecef;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow: hidden;
+            transform: scale(0.95) translateY(10px);
+            transition: transform 0.2s ease;
+        }
+
+        .event-modal-overlay.show .event-modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        .event-modal-header {
+            background: #2c3e50;
+            color: white;
+            padding: 20px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .event-modal-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0;
+            color: white;
+        }
+
+        .modal-close-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.2s ease;
+        }
+
+        .modal-close-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .event-modal-content {
+            padding: 24px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .event-detail-card {
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e9ecef;
+        }
+
+        .event-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
+            gap: 16px;
+        }
+
+        .event-title h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin: 0;
+            flex: 1;
+            line-height: 1.3;
+        }
+
+        .event-type-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+            color: white;
+            white-space: nowrap;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        .event-type-badge.event-general {
+            background: #3498db;
+        }
+
+        .event-type-badge.event-popup {
+            background: #e74c3c;
+        }
+
+        .event-type-badge.event-university {
+            background: #9b59b6;
+        }
+
+        .event-type-badge.event-movie {
+            background: #f39c12;
+        }
+
+        .event-info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .info-item.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .info-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #6c757d;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .info-value {
+            font-size: 14px;
+            color: #2c3e50;
+            line-height: 1.4;
+            word-break: break-word;
+        }
+
+        .event-modal-footer {
+            padding: 16px 24px;
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .modal-confirm-btn {
+            background: #2c3e50;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(44, 62, 80, 0.2);
+        }
+
+        .modal-confirm-btn:hover {
+            background: #34495e;
+            box-shadow: 0 4px 8px rgba(44, 62, 80, 0.3);
         }
 
         .loading-dots {
@@ -709,11 +1092,12 @@
             <p>Powered by Google Gemini Flash 2.5</p>
         </div>
         
-        <div class="chat-container" id="chatContainer">
-            <!-- 달력 섹션 -->
-            <div class="calendar-section" id="calendarSection">
+        <!-- 달력 섹션 -->
+        <div class="calendar-section" id="calendarSection">
                 <div class="calendar-header-section">
-                    <h2>📅 성동구 마케팅 달력</h2>
+                    <div class="header-title">
+                        <h2>성동구 마케팅 달력</h2>
+                    </div>
                     <div class="calendar-controls">
                         <div class="month-navigation">
                             <button class="nav-button" onclick="changeMonth(-1)">◀ 이전</button>
@@ -729,11 +1113,20 @@
                         </div>
                     </div>
                 </div>
-                <div class="calendar-grid" id="calendarGrid">
-                    <!-- 달력이 여기에 동적으로 생성됩니다 -->
+                <div class="calendar-container">
+                    <div class="calendar-grid" id="calendarGrid">
+                        <!-- 달력이 여기에 동적으로 생성됩니다 -->
+                    </div>
                 </div>
             </div>
 
+        <!-- 채팅 섹션 -->
+        <div class="chat-section">
+            <div class="chat-section-header">
+                💬 마케팅 상담
+        </div>
+        
+        <div class="chat-container" id="chatContainer">
             <div class="typing-indicator" id="typingIndicator">
                 <div class="message-avatar">🤖</div>
                 <div class="typing-dots">
@@ -748,29 +1141,38 @@
                 <p>마케팅 전략, SNS 홍보, 고객 유치 등 무엇이든 물어보세요!</p>
                 
                 <div class="suggestions">
-                    <div class="suggestion-card" onclick="sendSuggestion('성동구 지역 특성에 맞는 마케팅 전략을 추천해주세요.')">
+                    <div class="suggestion-card" onclick="sendSuggestionWithMenu('성동구 지역 특성에 맞는 마케팅 전략을 추천해주세요.', '지역마케팅')">
                         <h3>📍 지역 마케팅</h3>
                         <p>성동구 특성 기반 전략</p>
                     </div>
-                    <div class="suggestion-card" onclick="sendSuggestion('소상공인이 효과적으로 활용할 수 있는 SNS 마케팅 방법을 알려주세요.')">
+                    <div class="suggestion-card" onclick="sendSuggestionWithMenu('소상공인이 효과적으로 활용할 수 있는 SNS 마케팅 방법을 알려주세요.', 'SNS마케팅')">
                         <h3>📱 SNS 마케팅</h3>
                         <p>인스타그램, 블로그 활용</p>
                     </div>
-                    <div class="suggestion-card" onclick="sendSuggestion('저예산으로 할 수 있는 오프라인 홍보 방법을 추천해주세요.')">
+                    <div class="suggestion-card" onclick="sendSuggestionWithMenu('저예산으로 할 수 있는 오프라인 홍보 방법을 추천해주세요.', '저예산홍보')">
                         <h3>💡 저예산 홍보</h3>
                         <p>효율적인 오프라인 전략</p>
                     </div>
-                    <div class="suggestion-card" onclick="sendSuggestion('신규 고객을 유치하기 위한 이벤트 아이디어를 제안해주세요.')">
+                    <div class="suggestion-card" onclick="sendSuggestionWithMenu('신규 고객을 유치하기 위한 이벤트 아이디어를 제안해주세요.', '이벤트기획')">
                         <h3>🎉 이벤트 기획</h3>
                         <p>고객 유치 아이디어</p>
                     </div>
                 </div>
+                
+                <div class="document-management">
+                    <h4>📚 문서 관리</h4>
+                    <div class="doc-actions">
+                        <button class="doc-button" onclick="reloadDocuments()">🔄 문서 새로고침</button>
+                        <button class="doc-button" onclick="showDocumentList()">📋 문서 목록</button>
+                    </div>
+                    <div id="documentList" class="document-list" style="display: none;"></div>
             </div>
         </div>
         
         <div class="loading" id="loading">
             <div class="loading-dots">
                 응답을 생성하고 있습니다<span>.</span><span>.</span><span>.</span>
+                </div>
             </div>
         </div>
         
@@ -798,16 +1200,130 @@
             }
         }
 
+        function showLoading() {
+            const loading = document.getElementById('loading');
+            if (loading) {
+                loading.style.display = 'flex';
+            }
+        }
+
+        function hideLoading() {
+            const loading = document.getElementById('loading');
+            if (loading) {
+                loading.style.display = 'none';
+            }
+        }
+
         function sendSuggestion(message) {
             document.getElementById('userInput').value = message;
             sendMessage();
         }
 
-        async function sendMessage() {
+        function sendSuggestionWithMenu(message, menuType) {
+            document.getElementById('userInput').value = message;
+            sendMessageWithMenu(menuType);
+        }
+
+        async function reloadDocuments() {
+            try {
+                const response = await fetch('/api/reload-documents', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    addMessage(`📚 ${data.message}`, 'assistant');
+                    showDocumentList(); // 문서 목록 자동 표시
+                } else {
+                    addMessage(`❌ 문서 새로고침 실패: ${data.error}`, 'assistant');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                addMessage('❌ 문서 새로고침 중 오류가 발생했습니다.', 'assistant');
+            }
+        }
+
+        async function showDocumentList() {
+            try {
+                const response = await fetch('/api/documents');
+                const data = await response.json();
+                
+                const documentList = document.getElementById('documentList');
+                documentList.innerHTML = '';
+                
+                if (data.documents.length === 0) {
+                    documentList.innerHTML = '<div class="document-item">로드된 문서가 없습니다.</div>';
+                } else {
+                    data.documents.forEach(doc => {
+                        const docItem = document.createElement('div');
+                        docItem.className = 'document-item';
+                        docItem.innerHTML = `
+                            <strong>${doc.filename}</strong><br>
+                            <small>타입: ${doc.file_type} | 크기: ${doc.content_length}자</small>
+                        `;
+                        documentList.appendChild(docItem);
+                    });
+                }
+                
+                documentList.style.display = documentList.style.display === 'none' ? 'block' : 'none';
+            } catch (error) {
+                console.error('Error:', error);
+                addMessage('❌ 문서 목록 조회 중 오류가 발생했습니다.', 'assistant');
+            }
+        }
+
+        async function sendMessageWithMenu(menuType) {
             const input = document.getElementById('userInput');
             const message = input.value.trim();
             
             if (!message || isProcessing) return;
+            
+            isProcessing = true;
+            showLoading();
+            
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        menu_type: menuType
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('서버 오류가 발생했습니다.');
+                }
+                
+                const data = await response.json();
+                addMessage(data.message, 'assistant');
+                input.value = '';
+                
+            } catch (error) {
+                console.error('Error:', error);
+                addMessage('죄송합니다. 오류가 발생했습니다. 다시 시도해주세요.', 'assistant');
+            } finally {
+                hideLoading();
+                isProcessing = false;
+            }
+        }
+
+        async function sendMessage() {
+            console.log('sendMessage called');
+            const input = document.getElementById('userInput');
+            const message = input.value.trim();
+            console.log('Message:', message, 'isProcessing:', isProcessing);
+            
+            if (!message || isProcessing) {
+                console.log('Message empty or processing, returning');
+                return;
+            }
             
             // 웰컴 메시지 숨기기
             const welcomeMessage = document.getElementById('welcomeMessage');
@@ -817,14 +1333,14 @@
             
             // UI 업데이트
             isProcessing = true;
-            input.value = '';
-            document.getElementById('sendBtn').disabled = true;
-            document.getElementById('typingIndicator').classList.add('active');
+            showLoading();
             
             // 사용자 메시지 표시
             addMessage(message, 'user');
+            input.value = '';
             
             try {
+                console.log('Sending request to /api/chat...');
                 const response = await fetch('/api/chat', {
                     method: 'POST',
                     headers: {
@@ -836,10 +1352,12 @@
                     })
                 });
                 
+                console.log('Response received:', response.status);
                 const data = await response.json();
+                console.log('Response data:', data);
                 
                 if (response.ok) {
-                    addMessage(data.response, 'assistant');
+                    addMessage(data.message, 'assistant');
                 } else {
                     addMessage('오류: ' + (data.error || '응답을 받을 수 없습니다.'), 'assistant');
                 }
@@ -847,10 +1365,9 @@
                 addMessage('네트워크 오류가 발생했습니다. 다시 시도해주세요.', 'assistant');
                 console.error('Error:', error);
             } finally {
+                console.log('Request completed');
+                hideLoading();
                 isProcessing = false;
-                document.getElementById('sendBtn').disabled = false;
-                document.getElementById('typingIndicator').classList.remove('active');
-                input.focus();
             }
         }
 
@@ -872,7 +1389,7 @@
                 content.innerHTML = text;
             } else {
                 // 사용자 메시지는 텍스트로 표시
-                content.textContent = text;
+            content.textContent = text;
             }
             
             messageDiv.appendChild(avatar);
@@ -906,19 +1423,19 @@
                         <p>마케팅 전략, SNS 홍보, 고객 유치 등 무엇이든 물어보세요!</p>
                         
                         <div class="suggestions">
-                            <div class="suggestion-card" onclick="sendSuggestion('성동구 지역 특성에 맞는 마케팅 전략을 추천해주세요.')">
+                            <div class="suggestion-card" onclick="sendSuggestionWithMenu('성동구 지역 특성에 맞는 마케팅 전략을 추천해주세요.', '지역마케팅')">
                                 <h3>📍 지역 마케팅</h3>
                                 <p>성동구 특성 기반 전략</p>
                             </div>
-                            <div class="suggestion-card" onclick="sendSuggestion('소상공인이 효과적으로 활용할 수 있는 SNS 마케팅 방법을 알려주세요.')">
+                            <div class="suggestion-card" onclick="sendSuggestionWithMenu('소상공인이 효과적으로 활용할 수 있는 SNS 마케팅 방법을 알려주세요.', 'SNS마케팅')">
                                 <h3>📱 SNS 마케팅</h3>
                                 <p>인스타그램, 블로그 활용</p>
                             </div>
-                            <div class="suggestion-card" onclick="sendSuggestion('저예산으로 할 수 있는 오프라인 홍보 방법을 추천해주세요.')">
+                            <div class="suggestion-card" onclick="sendSuggestionWithMenu('저예산으로 할 수 있는 오프라인 홍보 방법을 추천해주세요.', '저예산홍보')">
                                 <h3>💡 저예산 홍보</h3>
                                 <p>효율적인 오프라인 전략</p>
                             </div>
-                            <div class="suggestion-card" onclick="sendSuggestion('신규 고객을 유치하기 위한 이벤트 아이디어를 제안해주세요.')">
+                            <div class="suggestion-card" onclick="sendSuggestionWithMenu('신규 고객을 유치하기 위한 이벤트 아이디어를 제안해주세요.', '이벤트기획')">
                                 <h3>🎉 이벤트 기획</h3>
                                 <p>고객 유치 아이디어</p>
                             </div>
@@ -996,7 +1513,6 @@
             const year = currentDate.getFullYear();
             const month = currentDate.getMonth();
             const firstDay = new Date(year, month, 1);
-            const lastDay = new Date(year, month + 1, 0);
             const startDate = new Date(firstDay);
             startDate.setDate(startDate.getDate() - firstDay.getDay());
 
@@ -1046,78 +1562,38 @@
             }
 
             // 이벤트 표시
-            if (events[dateString]) {
-                const dayEvents = events[dateString];
-                const filteredEvents = filterEvents(dayEvents);
+            const dayEvents = events[dateString] || [];
+            const filteredEvents = filterEvents(dayEvents);
+            
+            filteredEvents.forEach(event => {
+                const eventBar = document.createElement('div');
+                eventBar.className = `event-bar event-${event.type}`;
+                eventBar.textContent = event.name;
                 
-                // 연속 이벤트 처리
-                const processedEvents = processContinuousEvents(filteredEvents, dateString);
+                eventBar.onclick = (e) => {
+                    e.stopPropagation();
+                    showEventDetails(event);
+                };
                 
-                processedEvents.slice(0, 2).forEach(event => {
-                    const eventElement = document.createElement('div');
-                    eventElement.className = `event-item event-${event.type} ${event.continuousClass || ''}`;
-                    eventElement.textContent = event.name;
-                    eventElement.onclick = (e) => {
-                        e.stopPropagation();
-                        showEventDetails(event);
-                    };
-                    dayElement.appendChild(eventElement);
-                });
-
-                if (processedEvents.length > 2) {
-                    const moreElement = document.createElement('div');
-                    moreElement.className = 'event-item event-more';
-                    moreElement.textContent = `+${processedEvents.length - 2}`;
-                    moreElement.onclick = (e) => {
-                        e.stopPropagation();
-                        showEventDetails({...event, allEvents: processedEvents});
-                    };
-                    dayElement.appendChild(moreElement);
-                }
-            }
+                dayElement.appendChild(eventBar);
+            });
+            
+            // 모든 이벤트를 표시 (더보기 버튼 제거)
+            // 이벤트가 많을 경우 스크롤로 처리
 
             return dayElement;
         }
 
-        // 연속 이벤트 처리 함수
-        function processContinuousEvents(dayEvents, currentDateString) {
-            const processedEvents = [];
-            
-            dayEvents.forEach(event => {
-                const startDate = new Date(event.startDate);
-                const endDate = new Date(event.endDate);
-                const currentDate = new Date(currentDateString);
-                
-                // 이벤트가 하루만 지속되는 경우
-                if (isSameDate(startDate, endDate)) {
-                    processedEvents.push({
-                        ...event,
-                        continuousClass: 'continuous-single'
-                    });
-                    return;
-                }
-                
-                // 연속 이벤트인 경우
-                if (currentDate >= startDate && currentDate <= endDate) {
-                    let continuousClass = '';
-                    
-                    if (isSameDate(currentDate, startDate)) {
-                        continuousClass = 'continuous-start';
-                    } else if (isSameDate(currentDate, endDate)) {
-                        continuousClass = 'continuous-end';
-                    } else {
-                        continuousClass = 'continuous-middle';
-                    }
-                    
-                    processedEvents.push({
-                        ...event,
-                        continuousClass: continuousClass,
-                        isContinuous: true
-                    });
-                }
-            });
-            
-            return processedEvents;
+
+        // 이벤트 색상 가져오기
+        function getEventColor(type) {
+            const colors = {
+                'general': '#3498db',
+                'popup': '#e74c3c',
+                'university': '#9b59b6',
+                'movie': '#f39c12'
+            };
+            return colors[type] || '#3498db';
         }
 
         // 이벤트 필터링
@@ -1147,22 +1623,97 @@
 
         // 이벤트 상세 보기
         function showEventDetails(event) {
-            let content = '';
-            if (event.allEvents) {
-                content = `<h3>${formatDate(new Date(event.date))} 이벤트</h3>`;
-                event.allEvents.forEach(evt => {
-                    content += createEventInfo(evt);
-                });
-            } else {
-                content = `<h3>${event.name}</h3>`;
-                content += createEventInfo(event);
+            // 모달 오버레이 생성
+            const modalOverlay = document.createElement('div');
+            modalOverlay.className = 'event-modal-overlay';
+            modalOverlay.onclick = () => closeEventModal();
+            
+            // 모달 컨테이너 생성
+            const modalContainer = document.createElement('div');
+            modalContainer.className = 'event-modal-container';
+            modalContainer.onclick = (e) => e.stopPropagation();
+            
+            // 모달 헤더
+            const modalHeader = document.createElement('div');
+            modalHeader.className = 'event-modal-header';
+            modalHeader.innerHTML = `
+                <h2>📅 이벤트 상세 정보</h2>
+                <button class="modal-close-btn" onclick="closeEventModal()">✕</button>
+            `;
+            
+            // 모달 내용
+            const modalContent = document.createElement('div');
+            modalContent.className = 'event-modal-content';
+            modalContent.innerHTML = createEventModalContent(event);
+            
+            // 모달 푸터
+            const modalFooter = document.createElement('div');
+            modalFooter.className = 'event-modal-footer';
+            modalFooter.innerHTML = `
+                <button class="modal-confirm-btn" onclick="closeEventModal()">확인</button>
+            `;
+            
+            // 모달 조립
+            modalContainer.appendChild(modalHeader);
+            modalContainer.appendChild(modalContent);
+            modalContainer.appendChild(modalFooter);
+            modalOverlay.appendChild(modalContainer);
+            
+            // 모달 표시
+            document.body.appendChild(modalOverlay);
+            
+            // 애니메이션 효과
+            setTimeout(() => {
+                modalOverlay.classList.add('show');
+            }, 10);
+        }
+        
+        // 모달 닫기
+        function closeEventModal() {
+            const modal = document.querySelector('.event-modal-overlay');
+            if (modal) {
+                modal.classList.remove('show');
+                setTimeout(() => {
+                    modal.remove();
+                }, 300);
             }
-
-            // 간단한 알림으로 표시
-            alert(content.replace(/<[^>]*>/g, ''));
         }
 
-        // 이벤트 정보 생성
+        // 모달용 이벤트 콘텐츠 생성
+        function createEventModalContent(event) {
+            return `
+                <div class="event-detail-card">
+                    <div class="event-title">
+                        <h3>${event.name}</h3>
+                        <span class="event-type-badge event-${event.type}">${getEventTypeName(event.type)}</span>
+                    </div>
+                    
+                    <div class="event-info-grid">
+                        <div class="info-item">
+                            <div class="info-label">📅 기간</div>
+                            <div class="info-value">${event.startDate} ~ ${event.endDate}</div>
+                        </div>
+                        
+                        <div class="info-item">
+                            <div class="info-label">📍 위치</div>
+                            <div class="info-value">${event.location}</div>
+                        </div>
+                        
+                        <div class="info-item">
+                            <div class="info-label">👥 타겟</div>
+                            <div class="info-value">${event.target}</div>
+                        </div>
+                        
+                        <div class="info-item full-width">
+                            <div class="info-label">📝 설명</div>
+                            <div class="info-value">${event.description}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 이벤트 정보 생성 (기존 함수 유지)
         function createEventInfo(event) {
             return `
 이벤트명: ${event.name}
