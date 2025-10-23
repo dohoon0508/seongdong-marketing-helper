@@ -467,6 +467,7 @@ def chat():
 
 [CONTEXT PRIORITY]
 - 1순위: 신한카드분석.jsonl (키: INS, RULE, POPUP, 상권특성 등)  
+- 1.5순위: DiD 분석 결과 (did.csv) - 이벤트 시점별 지역간 매출 비율 변화 데이터
 - 2순위: 지역/월/업종과 직접 연관된 CSV/JSON (예: "성수 팝업 최종.csv", "성동구 공통_한양대_흥행영화 이벤트 DB.csv", 기타 상권/행사 DB)
 - 같은 정보가 중복일 땐 1순위를 우선 채택한다.
 
@@ -509,6 +510,7 @@ def chat():
 
 5. 근거/출처 목록
 - 신한카드분석.jsonl#INS-…, RULE-…, POPUP-…
+- did.csv#row… (DiD 분석 결과)
 - 성수 팝업 최종.csv#row…, 성동구 공통_한양대_흥행영화 이벤트 DB.csv#row…"""
 
         # L0 프로필 로딩
@@ -927,6 +929,188 @@ def needs_more_context(user_message, profile_text):
     need_keywords = ['구체적', '상세한', '자세한', '세부', '분석', '데이터', '통계', '비교', '경쟁사']
     return any(keyword in user_message for keyword in need_keywords)
 
+def get_evaluation_system_prompt(region, industry, store):
+    """심사용 시스템 프롬프트 생성"""
+    return f"""[SYSTEM / ROLE]
+너는 성동구 지역 소상공인을 위한 데이터 기반 마케팅 전략 전문가이며,  
+현재 답변은 "심사 평가형 과제(B-사전질문 정확도)"에 제출될 제안서 형식으로 작성해야 한다.  
+답변은 반드시 한국어로 작성한다.
+
+[CONTEXT SOURCE]
+- 1순위: 신한카드분석.jsonl (소비자 특성, 재방문률, 업종별 고객 연령·소비패턴)
+- 2순위: 성수 팝업 최종.csv, 성동구 공통_한양대_흥행영화 이벤트 DB.csv (실제 지역 행사/팝업 정보)
+- 3순위: 기타 동일 파티션의 상권 DB ({region} 지역, {industry} 업종)
+
+[RETRIEVAL RULES]
+- region={region}, industry={industry}, store={store}
+- 각 문항별 질의의 핵심 키워드(예: 방문고객 특성, 재방문률, 문제점 등)를 중심으로 3~5개 스니펫 검색
+- Top-K=3, 스니펫 길이=500~700자
+- 모든 수치·사실엔 (출처: 파일명#ID) 형태로 근거를 명시
+- 데이터가 없을 경우, "(일반 트렌드 기반 조언)"으로 표시해도 된다.
+
+[STYLE]
+- 형식은 "1️⃣ 분석 → 2️⃣ 실행 아이디어 → 3️⃣ 근거(출처)" 3단 구성.
+- 문체는 전문가가 심사위원에게 제안서를 설명하듯 구체적이되, 너무 학술적으로 쓰지 말 것.
+- 각 문항은 최소 4문단(분석·아이디어·효과·근거)으로 구성.
+- Bullet / 번호 리스트 적극 활용.
+
+[OUTPUT STRUCTURE]
+## B. 사전 질문 정확도 평가 답변 ({region}·{industry}·{store})
+
+### Q1. 주요 방문 고객 특성에 따른 마케팅 채널 추천 및 홍보안
+1️⃣ 방문고객 데이터 요약  
+2️⃣ 채널별(오프라인·온라인) 홍보 아이디어  
+3️⃣ 실행 근거 및 기대효과 (출처 포함)
+
+### Q2. 재방문률 30% 이하 가맹점 개선 아이디어
+1️⃣ 낮은 재방문률의 원인 요약  
+2️⃣ 개선 아이디어 및 실행 절차  
+3️⃣ 실증 근거 (출처 포함)
+
+### Q3. 요식업종 가맹점의 문제점 및 마케팅 아이디어
+1️⃣ 문제 정의  
+2️⃣ 해결 전략 (가격·프로모션·SNS 등)  
+3️⃣ 기대효과 및 데이터 근거
+
+[ENDING NOTE]
+마지막에는 "이 제안은 {region} 지역 {industry} 상권의 최신 데이터 기반으로 작성되었습니다." 한 줄을 붙인다."""
+
+def get_evaluation_user_prompt(region, industry, store):
+    """심사용 USER 프롬프트 생성"""
+    return f"""[USER]
+저는 {region} 지역에서 {industry} 업종의 "{store}"을 운영하고 있습니다.
+아래 세 가지 심사 질문에 대한 제안서를 작성해주세요.
+
+1) 주요 방문 고객 특성에 따른 마케팅 채널 추천 및 홍보안  
+2) 재방문률 30% 이하 가맹점의 재방문률 개선 아이디어  
+3) 요식업종 가맹점의 문제점 및 이를 보완할 마케팅 아이디어
+
+각 문항마다:
+- 실데이터 기반 분석 + 실행 아이디어 + 출처 표시를 포함해주세요.
+- 신한카드분석.jsonl, 성수 팝업 최종.csv, 성동구 공통_한양대_흥행영화 이벤트 DB.csv 데이터를 우선 참고해주세요."""
+
+def evaluation_search(region, industry, top_k=3):
+    """심사용 RAG 검색 (심사 질문에 최적화된 키워드)"""
+    try:
+        # 심사용 검색어 확장
+        search_terms = [
+            f"{region} {industry} 고객특성",
+            f"{region} {industry} 재방문률", 
+            f"{region} {industry} 문제점",
+            f"성동구 {industry} 팝업 이벤트",
+            "성수 상권 소비패턴",
+            "신한카드 소비분석"
+        ]
+        
+        relevant_snippets = []
+        
+        # 1순위: 신한카드분석.jsonl에서 심사 관련 키워드 검색
+        shinhan_file = "documents/raw/신한카드분석.jsonl"
+        if os.path.exists(shinhan_file):
+            with open(shinhan_file, 'r', encoding='utf-8') as f:
+                for line_num, line in enumerate(f, 1):
+                    try:
+                        data = json.loads(line)
+                        content = data.get('body', '')
+                        doc_type = data.get('doc_type', '')
+                        title = data.get('title', '')
+                        
+                        # 심사 관련 키워드 우선 검색
+                        if any(keyword in content.lower() or keyword in title.lower() 
+                               for keyword in ['고객', '재방문', '소비패턴', '특성', '문제점']):
+                            if any(term in content.lower() for term in search_terms):
+                                snippet = content[:700]  # 500~700자
+                                source_tag = f"신한카드분석.jsonl#{doc_type}-{line_num}"
+                                relevant_snippets.append({
+                                    'content': snippet,
+                                    'source': source_tag,
+                                    'priority': 1,
+                                    'score': 1.0
+                                })
+                    except:
+                        continue
+        
+        # 2순위: CSV 파일들에서 심사 관련 검색
+        csv_files = [
+            ("did.csv", 1.5),  # DiD 분석 결과
+            ("성수 팝업 최종.csv", 2),
+            ("성동구 공통_한양대_흥행영화 이벤트 DB.csv", 2)
+        ]
+        
+        for csv_file, priority in csv_files:
+            csv_path = os.path.join(app.root_path, 'documents', 'raw', csv_file)
+            if os.path.exists(csv_path):
+                try:
+                    df = pd.read_csv(csv_path)
+                    
+                    # DiD 분석 데이터 특별 처리
+                    if csv_file == "did.csv":
+                        for idx, row in df.iterrows():
+                            treatment_group = str(row.get('처치군', ''))
+                            control_group = str(row.get('통제군', ''))
+                            event_month = str(row.get('이벤트 시점', ''))
+                            change_type = str(row.get('증가&감소여부', ''))
+                            percentage = str(row.get('퍼센트', ''))
+                            
+                            if region and (region in treatment_group or region in control_group):
+                                did_interpretation = f"{event_month}월을 기준으로 성동구의 {treatment_group}은 {control_group}과 비교해 보았을때 동일업종 매출 비율이 {percentage}% {change_type}함을 볼수 있었다."
+                                source_tag = f"did.csv#row{idx+1}"
+                                relevant_snippets.append({
+                                    'content': did_interpretation,
+                                    'source': source_tag,
+                                    'priority': priority,
+                                    'score': 1.0
+                                })
+                    
+                    # 일반 CSV 파일 처리
+                    else:
+                        for idx, row in df.iterrows():
+                            row_content = " ".join([str(v) for v in row.values if pd.notna(v)])
+                            if any(term in row_content.lower() for term in search_terms):
+                                snippet = row_content[:700]
+                                source_tag = f"{csv_file}#row{idx+1}"
+                                relevant_snippets.append({
+                                    'content': snippet,
+                                    'source': source_tag,
+                                    'priority': priority,
+                                    'score': 0.8
+                                })
+                except Exception as e:
+                    print(f"⚠️ CSV 파일 처리 실패 {csv_file}: {e}")
+        
+        # 우선순위와 점수로 정렬
+        relevant_snippets.sort(key=lambda x: (x['priority'], x['score']), reverse=True)
+        
+        # 중복 제거
+        unique_snippets = []
+        for snippet in relevant_snippets:
+            is_duplicate = False
+            for existing in unique_snippets:
+                if len(set(snippet['content'].split()) & set(existing['content'].split())) / len(set(snippet['content'].split()) | set(existing['content'].split())) > 0.9:
+                    is_duplicate = True
+                    break
+            if not is_duplicate:
+                unique_snippets.append(snippet)
+        
+        # Top-K 선택
+        selected_snippets = unique_snippets[:top_k]
+        
+        # 스니펫 포맷팅
+        if selected_snippets:
+            formatted_snippets = []
+            for i, snippet in enumerate(selected_snippets, 1):
+                formatted_snippets.append(f"[스니펫 {i}] (출처: {snippet['source']})\n{snippet['content']}")
+            
+            result = "\n\n".join(formatted_snippets)
+            print(f"🔍 심사용 RAG 검색 완료: {len(selected_snippets)}개 스니펫")
+            return result
+        
+        return ""
+        
+    except Exception as e:
+        print(f"⚠️ 심사용 RAG 검색 실패: {e}")
+        return ""
+
 def slim_search(user_message, partition, top_k=3):
     """L1 슬림 RAG 검색 (우선순위 기반 검색)"""
     try:
@@ -987,6 +1171,7 @@ def slim_search(user_message, partition, top_k=3):
         
         # 2순위: CSV 파일들에서 검색 (상위 3개만)
         csv_files = [
+            ("did.csv", 1.5),  # DiD 분석 결과 (1.5순위)
             ("성수 팝업 최종.csv", 2),
             ("성동구 공통_한양대_흥행영화 이벤트 DB.csv", 2)
         ]
@@ -996,17 +1181,45 @@ def slim_search(user_message, partition, top_k=3):
             if os.path.exists(csv_path):
                 try:
                     df = pd.read_csv(csv_path)
-                    for idx, row in df.iterrows():
-                        row_content = " ".join([str(v) for v in row.values if pd.notna(v)])
-                        if any(term in row_content.lower() for term in search_terms if term):
-                            snippet = row_content[:600]
-                            source_tag = f"{csv_file}#row{idx+1}"
-                            relevant_snippets.append({
-                                'content': snippet,
-                                'source': source_tag,
-                                'priority': priority,
-                                'score': 0.8
-                            })
+                    
+                    # DiD 분석 데이터 특별 처리
+                    if csv_file == "did.csv":
+                        for idx, row in df.iterrows():
+                            # 지역 매칭 확인
+                            treatment_group = str(row.get('처치군', ''))
+                            control_group = str(row.get('통제군', ''))
+                            event_month = str(row.get('이벤트 시점', ''))
+                            change_type = str(row.get('증가&감소여부', ''))
+                            percentage = str(row.get('퍼센트', ''))
+                            
+                            # 검색 지역과 매칭되는 경우
+                            if (region and (region in treatment_group or region in control_group)) or \
+                               any(term in treatment_group.lower() for term in search_terms if term):
+                                
+                                # DiD 분석 결과를 자연어로 변환
+                                did_interpretation = f"{event_month}월을 기준으로 성동구의 {treatment_group}은 {control_group}과 비교해 보았을때 동일업종 매출 비율이 {percentage}% {change_type}함을 볼수 있었다."
+                                
+                                source_tag = f"did.csv#row{idx+1}"
+                                relevant_snippets.append({
+                                    'content': did_interpretation,
+                                    'source': source_tag,
+                                    'priority': priority,
+                                    'score': 1.0  # DiD 분석은 높은 점수
+                                })
+                    
+                    # 일반 CSV 파일 처리
+                    else:
+                        for idx, row in df.iterrows():
+                            row_content = " ".join([str(v) for v in row.values if pd.notna(v)])
+                            if any(term in row_content.lower() for term in search_terms if term):
+                                snippet = row_content[:600]
+                                source_tag = f"{csv_file}#row{idx+1}"
+                                relevant_snippets.append({
+                                    'content': snippet,
+                                    'source': source_tag,
+                                    'priority': priority,
+                                    'score': 0.8
+                                })
                 except Exception as e:
                     print(f"⚠️ CSV 파일 처리 실패 {csv_file}: {e}")
         
@@ -1042,6 +1255,107 @@ def slim_search(user_message, partition, top_k=3):
     except Exception as e:
         print(f"⚠️ L1 슬림 RAG 검색 실패: {e}")
         return ""
+
+@app.route('/api/evaluation', methods=['POST'])
+def generate_evaluation():
+    """심사용 제안서 생성"""
+    try:
+        data = request.get_json()
+        session_id = data.get('session_id', 'default')
+        
+        # 사용자 설정 정보 가져오기
+        if session_id not in user_setups:
+            return jsonify({'error': '사용자 설정이 없습니다.'}), 400
+        
+        setup_info = user_setups[session_id]
+        location = setup_info.get('location', '')
+        industry = setup_info.get('industry', '')
+        store_name = setup_info.get('store_name', '')
+        
+        if not location or not industry or not store_name:
+            return jsonify({'error': '지역, 업종, 가게명이 모두 설정되어야 합니다.'}), 400
+        
+        # Google API 키 확인
+        if not os.getenv('GOOGLE_API_KEY'):
+            return jsonify({
+                'message': '❌ Google API Key가 설정되지 않았습니다. 관리자에게 문의하세요.',
+                'session_id': session_id
+            }), 500
+        
+        # 심사용 시스템 프롬프트 생성
+        system_prompt = get_evaluation_system_prompt(location, industry, store_name)
+        
+        # 심사용 USER 프롬프트 생성
+        user_prompt = get_evaluation_user_prompt(location, industry, store_name)
+        
+        # 심사용 RAG 검색
+        snippets = evaluation_search(location, industry, 3)
+        
+        # 프롬프트 조립
+        prompt_parts = [system_prompt]
+        
+        if snippets:
+            prompt_parts.append(f"[심사용 컨텍스트]\n{snippets}")
+        
+        prompt_parts.append(user_prompt)
+        full_prompt = "\n\n".join(prompt_parts)
+        
+        # 프롬프트 길이 제한
+        if len(full_prompt) > 6000:
+            full_prompt = f"{system_prompt}\n\n{user_prompt}"
+            print("⚠️ 심사용 프롬프트가 너무 길어서 RAG 컨텍스트를 제외했습니다.")
+        
+        # Gemini 모델 호출
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        
+        # 타임아웃 설정 (3분)
+        import threading
+        import queue
+        
+        result_queue = queue.Queue()
+        
+        def api_call():
+            try:
+                response = model.generate_content(full_prompt)
+                result_queue.put(('success', response.text))
+            except Exception as e:
+                result_queue.put(('error', str(e)))
+        
+        thread = threading.Thread(target=api_call)
+        thread.start()
+        thread.join(timeout=180)  # 3분 타임아웃
+        
+        if thread.is_alive():
+            return jsonify({
+                'message': '⏰ 심사용 제안서 생성 시간이 초과되었습니다. 다시 시도해주세요.',
+                'session_id': session_id
+            }), 408
+        
+        if result_queue.empty():
+            return jsonify({
+                'message': '❌ 심사용 제안서 생성에 실패했습니다.',
+                'session_id': session_id
+            }), 500
+        
+        result_type, result_data = result_queue.get()
+        
+        if result_type == 'error':
+            return jsonify({
+                'message': f'❌ 심사용 제안서 생성 오류: {result_data}',
+                'session_id': session_id
+            }), 500
+        
+        return jsonify({
+            'message': result_data,
+            'session_id': session_id
+        })
+        
+    except Exception as e:
+        print(f"❌ 심사용 제안서 생성 실패: {e}")
+        return jsonify({
+            'message': f'❌ 심사용 제안서 생성 실패: {str(e)}',
+            'session_id': session_id
+        }), 500
 
 @app.route('/api/calendar-events', methods=['GET'])
 def get_calendar_events():

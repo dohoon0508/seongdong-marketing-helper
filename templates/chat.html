@@ -216,6 +216,53 @@
             cursor: not-allowed;
         }
 
+        /* 심사 질문 메뉴 스타일 */
+        .evaluation-menu {
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #e3f2fd 0%, #f5f5f5 100%);
+            border-top: 1px solid #ddd;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .evaluation-menu h4 {
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .evaluation-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .evaluation-btn {
+            padding: 8px 12px;
+            background: linear-gradient(135deg, #4a90e2 0%, #5b7edc 100%);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .evaluation-btn:hover {
+            background: linear-gradient(135deg, #3a7bc8 0%, #4a6bd1 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
+        }
+
+        .evaluation-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
         .loading {
             display: none;
             text-align: center;
@@ -817,6 +864,22 @@
             <div class="spinner"></div>
             <div>🤖 AI가 답변을 생성하고 있습니다...</div>
         </div>
+
+        <!-- 심사 질문 메뉴 -->
+        <div class="evaluation-menu">
+            <h4>🏆 심사 평가 질문</h4>
+            <div class="evaluation-buttons">
+                <button class="evaluation-btn" onclick="generateEvaluation('Q1')" disabled id="evalQ1">
+                    Q1. 고객특성별 채널 추천
+                </button>
+                <button class="evaluation-btn" onclick="generateEvaluation('Q2')" disabled id="evalQ2">
+                    Q2. 재방문률 개선 아이디어
+                </button>
+                <button class="evaluation-btn" onclick="generateEvaluation('Q3')" disabled id="evalQ3">
+                    Q3. 요식업 문제점 & 해결방안
+                </button>
+            </div>
+        </div>
         
         <div class="chat-input">
             <input type="text" id="userInput" placeholder="마케팅 관련 질문을 입력하세요..." onkeypress="handleKeyPress(event)">
@@ -1237,6 +1300,62 @@
             }
         });
 
+        // 심사 질문 버튼 활성화
+        function enableEvaluationButtons() {
+            if (setupInfo && setupInfo.location && setupInfo.industry && setupInfo.store_name) {
+                document.getElementById('evalQ1').disabled = false;
+                document.getElementById('evalQ2').disabled = false;
+                document.getElementById('evalQ3').disabled = false;
+            }
+        }
+
+        // 심사 질문 생성
+        async function generateEvaluation(questionType) {
+            if (isProcessing) {
+                return;
+            }
+
+            if (!setupInfo || !setupInfo.location || !setupInfo.industry || !setupInfo.store_name) {
+                alert('지역, 업종, 가게명이 모두 설정되어야 심사 질문을 생성할 수 있습니다.');
+                return;
+            }
+
+            isProcessing = true;
+            showLoading();
+
+            try {
+                const response = await fetch('/api/evaluation', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        session_id: sessionId,
+                        question_type: questionType
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.message) {
+                    // 기존 채팅 메시지 초기화
+                    const chatContainer = document.getElementById('chatContainer');
+                    chatContainer.innerHTML = '';
+                    
+                    // 심사 질문 결과를 채팅에 추가
+                    addMessage(data.message, 'assistant');
+                } else {
+                    addMessage('❌ 심사 질문 생성에 실패했습니다.', 'assistant');
+                }
+            } catch (error) {
+                console.error('심사 질문 생성 실패:', error);
+                addMessage('❌ 네트워크 오류가 발생했습니다. 다시 시도해주세요.', 'assistant');
+            } finally {
+                isProcessing = false;
+                hideLoading();
+            }
+        }
+
         // 페이지 로드 시 설정 정보 확인 및 달력 렌더링
         document.addEventListener('DOMContentLoaded', async function() {
             try {
@@ -1248,6 +1367,8 @@
                     document.getElementById('currentSetup').innerHTML = `
                         📍 ${setupInfo.location} | 🏪 ${setupInfo.industry} | 🏪 ${setupInfo.store_name}
                     `;
+                    // 심사 질문 버튼 활성화
+                    enableEvaluationButtons();
                 } else {
                     // 설정이 없으면 설정 페이지로 이동
                     window.location.href = '/setup';
