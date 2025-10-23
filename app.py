@@ -123,8 +123,8 @@ def load_rag_documents():
                     content += f"총 라인 수: {len(lines)}\n\n"
                     content += "데이터 내용:\n"
                     
-                    # Render 환경에서 메모리 최적화: 처음 10개 레코드만 처리
-                    max_records = 10
+                    # Render 환경에서 메모리 최적화: 처음 5개 레코드만 처리
+                    max_records = 5
                     for i, line in enumerate(lines[:max_records]):
                         if line.strip():  # 빈 줄이 아닌 경우만
                             try:
@@ -421,6 +421,10 @@ def chat():
         user_message = data.get('message', '')
         session_id = data.get('session_id', 'default')
         
+        # 지역과 업종 정보 가져오기
+        location = data.get('location', '')
+        industry = data.get('industry', '')
+        
         if not user_message:
             return jsonify({'error': '메시지를 입력해주세요.'}), 400
         
@@ -533,11 +537,21 @@ def chat():
             rag_context += "💡 특히 상권별 특성, 고객층 분석, 시간대별 패턴, 업종별 인사이트를 활용하여 실무진이 바로 실행할 수 있는 전략을 제시해주세요.\n"
             rag_context += "📊 **답변 형식**: 답변할 때는 반드시 '신한카드 데이터 정보를 바탕으로 말씀드리자면...', '분석 결과에 따르면...', '데이터에서 확인된 바에 따르면...' 등의 표현을 사용하여 데이터 출처를 명시해주세요.\n"
         
+        # 지역과 업종 정보를 포함한 컨텍스트 생성
+        location_context = ""
+        if location or industry:
+            location_context = f"\n\n📍 **선택된 정보**:\n"
+            if location:
+                location_context += f"- 지역: {location}\n"
+            if industry:
+                location_context += f"- 업종: {industry}\n"
+            location_context += "위 정보를 고려하여 지역별, 업종별 맞춤형 조언을 제공해주세요.\n"
+        
         # 첫 메시지에 시스템 컨텍스트와 RAG 컨텍스트 추가
         if len(chat.history) == 0:
-            full_message = f"{system_context}{rag_context}\n\n사용자: {user_message}"
+            full_message = f"{system_context}{rag_context}{location_context}\n\n사용자: {user_message}"
         else:
-            full_message = f"{rag_context}\n\n사용자: {user_message}"
+            full_message = f"{rag_context}{location_context}\n\n사용자: {user_message}"
         
         # 캐시 확인 (자주 묻는 질문에 대한 빠른 응답)
         cache_key = user_message.lower().strip()
@@ -772,5 +786,10 @@ else:
     # Render에서 Gunicorn으로 실행될 때는 이 부분이 실행되지 않음
     # Gunicorn이 직접 app 객체를 import하여 사용
     print("🔧 Gunicorn 모드로 실행 중...")
+    
+    # Render 환경에서 메모리 절약을 위해 앱 시작 시 문서 로딩 비활성화
+    print("🚀 Render 환경에서 실행 중 - RAG 문서는 요청 시 로딩됩니다.")
+    rag_documents = {}
+    document_index = {'keywords': {}, 'categories': {}, 'entities': {}}
     pass
 

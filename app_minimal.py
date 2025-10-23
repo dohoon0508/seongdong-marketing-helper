@@ -76,9 +76,25 @@ def chat():
         특히 선택된 지역과 업종에 맞는 구체적이고 실용적인 조언을 해주세요.
         """
         
-        response = model.generate_content(prompt)
-        response_text = response.text
-        html_response = markdown.markdown(response_text, extensions=['extra'])
+        # Gemini API 호출 (타임아웃 설정)
+        import time
+        start_time = time.time()
+        
+        try:
+            response = model.generate_content(prompt)
+            response_text = response.text
+            html_response = markdown.markdown(response_text, extensions=['extra'])
+            
+            # 처리 시간 로깅
+            processing_time = time.time() - start_time
+            print(f"⏱️ API 응답 시간: {processing_time:.2f}초")
+            
+        except Exception as e:
+            print(f"⚠️ API 호출 오류: {str(e)}")
+            return jsonify({
+                'message': '❌ AI 응답 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
+                'status': 'error'
+            }), 500
         
         return jsonify({
             'message': html_response,
