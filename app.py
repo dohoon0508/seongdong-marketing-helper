@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, redirect
 from flask_cors import CORS
 import google.generativeai as genai
 import os
@@ -9,6 +9,8 @@ from datetime import datetime, timedelta
 import glob
 import re
 from pathlib import Path
+import csv
+import json
 
 # 환경 변수 로드
 load_dotenv()
@@ -411,7 +413,16 @@ def load_event_data():
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    # 메인 페이지는 설정 페이지로 리다이렉트
+    return redirect('/setup')
+
+@app.route('/setup')
+def setup():
+    return render_template('setup.html')
+
+@app.route('/chat')
+def chat_page():
+    return render_template('chat.html')
 
 @app.route('/calendar')
 def calendar():
@@ -424,13 +435,19 @@ def chat():
         user_message = data.get('message', '')
         session_id = data.get('session_id', 'default')
         
-        # 지역과 업종 정보 가져오기
-        location = data.get('location', '')
-        industry = data.get('industry', '')
-        print(f"📍 지역: {location}, 🏢 업종: {industry}")
-        
         if not user_message:
             return jsonify({'error': '메시지를 입력해주세요.'}), 400
+        
+        # 저장된 설정 정보 가져오기
+        setup_info = user_setups.get('default', None)
+        if not setup_info:
+            return jsonify({'error': '설정이 완료되지 않았습니다. 먼저 설정을 완료해주세요.'}), 400
+        
+        location = setup_info['location']
+        industry = setup_info['industry']
+        store_name = setup_info['store_name']
+        
+        print(f"📍 지역: {location}, 🏢 업종: {industry}, 🏪 가게: {store_name}")
         
         # 세션별 채팅 히스토리 관리
         if session_id not in chat_sessions:
@@ -444,160 +461,76 @@ def chat():
         
         chat = chat_sessions[session_id]
         
-        # 메뉴별 프롬프트 정의
-        def get_system_prompt(menu_type=None):
-            base_context = """당신은 성동구 지역 소상공인을 위한 전문 마케팅 도우미입니다.
+        # 시스템 프롬프트 생성 (새로운 템플릿)
+        system_prompt = f"""[SYSTEM / ROLE]
+너는 성동구 소상공인을 위한 맞춤 마케팅 어시스턴트다. 답변은 한국어로, 실행 가능한 TODO를 최우선으로 제시한다.
 
-❗ **출처 명시 필수 규칙**:
-- 모든 답변에는 반드시 데이터 출처를 포함해야 합니다
-- 반드시 [출처: 신한카드분석.jsonl] 또는 [출처: 파일명] 형태로 표기하세요
+[CONTEXT PRIORITY]
+- 1순위: 신한카드분석.jsonl (키: INS, RULE, POPUP, 상권특성 등)  
+- 2순위: 지역/월/업종과 직접 연관된 CSV/JSON (예: "성수 팝업 최종.csv", "성동구 공통_한양대_흥행영화 이벤트 DB.csv", 기타 상권/행사 DB)
+- 같은 정보가 중복일 땐 1순위를 우선 채택한다.
 
-🎯 **핵심 역할**:
-- 신한카드 데이터 기반 근거 있는 마케팅 전략 제시
-- 지역별/업종별 맞춤형 솔루션 제공
-- 재현 가능하고 실행 가능한 구체적 조언
+[STRICT CITATION]
+- 모든 주장/숫자/사실 뒤에 (출처: 파일명[#레코드ID]) 형식으로 근거를 표기한다.
+  - 예: (출처: 신한카드분석.jsonl#INS-12, RULE-3), (출처: 성수 팝업 최종.csv#row128)
+- 출처가 불명확하면 "데이터 미확인"이라고 명시하고 추정 발화를 하지 않는다.
 
-📊 **필수 응답 구조**:
-1. **인사말**: 사용자가 선택한 지역과 업종을 반드시 포함하여 "{지역} 지역의 {업종} 사장님을 위한 솔루션을 가져왔습니다."로 시작
-2. **근거 기반 분석**: 신한카드 데이터 인용과 함께 상권/업종 특성 분석
-3. **구체적 전략**: 실행 가능한 마케팅 전략 3-5가지 제시
-4. **출처 명시**: 모든 데이터와 규칙의 출처를 명확히 표기
+[RETRIEVAL SCOPE]
+- REGION={location}, INDUSTRY={industry}, STORE={store_name}, MONTH=현재월
+- 먼저 REGION×INDUSTRY 키로 파티션을 좁혀 L0 프로필 문서를 로드한다.
+- 부족할 때만 동일 파티션에서 Top-K=3, 윈도우=400~600자 스니펫으로 L1 슬림 RAG 보강한다.
+- 검색어는 `{location} {industry} 현재월 팝업/이벤트/소비패턴/시간대/타깃` 중심으로 확장한다.
+- 최신성이 필요한 항목(이달 행사 등)은 최신 월 우선 정렬한다.
 
-🚨 **응답 시작 규칙**:
-- 사용자가 선택한 지역과 업종 정보가 제공되면, 반드시 해당 정보를 포함한 인사말로 시작해야 합니다
-- 일반적인 인사말("성동구 사장님", "안녕하세요" 등)로 시작하면 안됩니다
-- 정확한 형식: "{선택된지역} 지역의 {선택된업종} 사장님을 위한 솔루션을 가져왔습니다."
+[STYLE & TONE]
+- 첫 문장 고정: "{location} 지역의 {industry} 사장님, 안녕하세요. 현재월 마케팅 가이드를 정리했습니다."
+- 문단은 짧게, 리스트/표를 적극 활용. 사장님이 바로 실행할 수 있도록 수치·행동·툴을 구체화.
+- 지역 특징과 업종 특성을 "교집합 관점"으로 제시.
 
-🔍 **데이터 활용 원칙**:
-- 신한카드분석.jsonl의 모든 인사이트와 규칙을 적극 활용
-- 상권별 특성, 고객층 분석, 시간대별 패턴을 반드시 반영
-- 업종별 적합도와 타겟 매칭 규칙을 적용
+[OUTPUT FORMAT]
+# ☕ {location} {industry}를 위한 현재월 맞춤형 마케팅 전략
 
-성동구 지역 정보:
-- 성수동: 트렌디한 카페, 팝업스토어, 젊은 층 중심
-- 왕십리: 전통시장, 중앙시장, 전통과 현대 공존
-- 응봉동: 주거지역, 가족 중심
-- 옥수동: 한강 근처, 레저업종 유리
-- 금호동: 전통 상업지역
+간단요약(2~3문장) — 핵심 인사이트와 이번 달 기회 포인트. (출처: …)
 
-답변 형식:
-- 마크다운 형식으로 구조화된 답변
-- 제목, 목록, 강조 등을 활용
-- 구체적이고 실행 가능한 조언"""
+1. 상권·수요 핵심 포인트
+- ● 유동/연령/시간대/객단가 핵심 관찰 3~5개 (숫자/근거 포함). (출처: …)
 
-            if menu_type == "지역마케팅":
-                return base_context + """
+2. 이번 달( 현재월 ) 이벤트/팝업 연계 아이디어
+- ● 아이디어명 — 왜/어떻게/예상효과/간단 실행 절차. (출처: …)
+- ● …
 
-당신의 역할 (지역 마케팅 전문):
-1. 성동구 각 동네별 특성을 분석한 맞춤형 마케팅 전략
-2. 지역 상권 분석 및 경쟁업체 대응 방안
-3. 지역 커뮤니티와의 연계 방안
-4. 지역 특화 이벤트 및 프로모션 아이디어
-5. 지역 주민 대상 타겟팅 전략"""
+3. 채널별 실전 액션(이번 주 바로 실행)
+- [ ] 네이버플레이스: 키워드/해시태그/리뷰 리프레이밍(예시 문구). (출처: …)
+- [ ] 인스타 릴스: 캘린더 연동/콘텐츠 테마/업로드 시각. (출처: …)
+- [ ] 오프라인: 세트/타임세일/콜라보 구체안. (출처: …)
 
-            elif menu_type == "SNS마케팅":
-                return base_context + """
+4. 가격·구성 제안(선택)
+- ● 점심 회전/저녁 체류형 각 1안씩: 구성/가격/전환 트리거. (출처: …)
 
-당신의 역할 (SNS 마케팅 전문):
-1. 인스타그램, 블로그, 페이스북 등 플랫폼별 전략
-2. 해시태그 및 콘텐츠 기획 조언
-3. 인플루언서 협업 및 UGC 전략
-4. SNS 광고 및 부스팅 전략
-5. 바이럴 마케팅 및 트렌드 활용법"""
+5. 근거/출처 목록
+- 신한카드분석.jsonl#INS-…, RULE-…, POPUP-…
+- 성수 팝업 최종.csv#row…, 성동구 공통_한양대_흥행영화 이벤트 DB.csv#row…"""
 
-            elif menu_type == "저예산홍보":
-                return base_context + """
-
-당신의 역할 (저예산 홍보 전문):
-1. 무료/저비용 마케팅 채널 활용법
-2. 오프라인 홍보 전략 (전단지, 현수막, 입간판 등)
-3. 지역 이벤트 및 협업 기회 활용
-4. 입소문 마케팅 전략
-5. 고객 추천 프로그램 및 리워드 시스템"""
-
-            elif menu_type == "이벤트기획":
-                return base_context + """
-
-당신의 역할 (이벤트 기획 전문):
-1. 고객 유치를 위한 창의적 이벤트 아이디어
-2. 계절별/테마별 이벤트 기획
-3. 이벤트 홍보 및 참여 유도 전략
-4. 이벤트 성과 측정 및 개선 방안
-5. 협업 이벤트 및 지역 연계 방안"""
-
-            else:
-                return base_context + """
-
-당신의 역할:
-1. 성동구 지역 특성을 고려한 맞춤형 마케팅 조언
-2. 예산별 실용적인 전략 제안
-3. SNS, 오프라인, 이벤트 등 다양한 마케팅 방법 안내
-4. 마케팅 템플릿과 구체적인 실행 방법 제공"""
-
-        # 메뉴 타입 확인
-        menu_type = data.get('menu_type', None)
-        system_context = get_system_prompt(menu_type)
+        # L0 프로필 로딩
+        profile_text = load_l0_profile(location, industry)
         
-        # RAG: 관련 문서 검색 (요청 시 로딩)
-        # 문서가 로드되지 않았다면 먼저 로드
-        global rag_documents, document_index
-        if not rag_documents:
-            try:
-                print("📚 문서 로딩 시작...")
-                rag_documents = load_rag_documents()
-                document_index = build_document_index()
-                print(f"📚 문서 로드 완료: {len(rag_documents)}개")
-            except Exception as e:
-                print(f"⚠️ 문서 로딩 실패: {e}")
-                rag_documents = {}
-                document_index = {'keywords': {}, 'categories': {}, 'entities': {}}
+        # L1 슬림 RAG 검색 (필요시에만)
+        snippets = ""
+        if needs_more_context(user_message, profile_text):
+            snippets = slim_search(user_message, f"{location}:{industry}", 3)
         
-        relevant_docs = search_relevant_documents(user_message)
+        # 프롬프트 조립
+        prompt_parts = [system_prompt]
         
-        # RAG 컨텍스트 추가
-        rag_context = ""
-        if relevant_docs:
-            rag_context = "\n\n=== 📊 신한카드 데이터 분석 결과 및 참고 문서 ===\n"
-            for doc in relevant_docs:
-                rag_context += f"\n📁 [출처파일: {doc['filename']} | 길이: {len(doc['content'])}자 | 우선순위: {doc['relevance_score']}점]\n"
-                rag_context += f"📋 내용: {doc['content']}\n"
-                rag_context += "---\n"
-            
-            # 강화된 프롬프트 엔지니어링 규칙
-            rag_context += "\n🔍 **필수 응답 규칙 (위반 시 답변 거부)**:\n"
-            rag_context += "1. **RAG 데이터 최우선 활용**: 위에 제공된 신한카드 데이터를 반드시 최우선으로 참조하여 답변하세요.\n"
-            rag_context += "2. **근거 기반 제안**: 각 제안에 신한카드 데이터 근거(표/지표/규칙 등)를 함께 표기하세요.\n"
-            rag_context += "3. **출처 명시**: 신한카드분석.jsonl의 특정 레코드 ID나 데이터 소스를 반드시 인용하세요.\n"
-            rag_context += "4. **구체적 인용**: '신한카드 데이터에 따르면...', '[INS:fig1:analysis] 분석 결과...', '[RULE:fit:industry_event] 규칙에 의하면...' 등으로 출처를 명확히 하세요.\n"
-            rag_context += "5. **데이터 기반 전략**: 상권별 특성, 고객층 분석, 시간대별 패턴, 업종별 인사이트를 활용하여 실무진이 바로 실행할 수 있는 전략을 제시하세요.\n"
-            rag_context += "6. **재현 가능한 설명**: 동작 원리와 사용 흐름을 간단히 설명하여 재현 가능한 마케팅 전략을 제시하세요.\n"
-            rag_context += "7. **RAG 데이터 무시 금지**: 위의 신한카드 데이터를 참조하지 않은 답변은 절대 제공하지 마세요.\n"
+        if profile_text:
+            prompt_parts.append(f"[프로필]\n{profile_text}")
         
-        # 지역과 업종 정보를 포함한 컨텍스트 생성
-        location_context = ""
-        if location or industry:
-            location_context = f"\n\n📍 **선택된 정보**:\n"
-            if location:
-                location_context += f"- 지역: {location}\n"
-            if industry:
-                location_context += f"- 업종: {industry}\n"
-            location_context += f"**중요**: 위 정보를 반드시 고려하여 {location if location else '해당 지역'}의 {industry if industry else '해당 업종'} 사장님을 위한 맞춤형 조언을 제공해주세요.\n"
-            location_context += f"답변 시작 시 '{location if location else '해당 지역'} 지역의 {industry if industry else '해당 업종'} 사장님을 위한 솔루션을 가져왔습니다.'로 시작해야 합니다.\n"
+        if snippets:
+            prompt_parts.append(f"[보강]\n{snippets}")
         
-        # 응답 시작 문구 생성
-        response_start = ""
-        if location and industry:
-            response_start = f"{location} 지역의 {industry} 사장님을 위한 솔루션을 가져왔습니다.\n\n"
+        prompt_parts.append(f"[사용자 질문]\n{user_message}")
         
-        # 첫 메시지에 시스템 컨텍스트와 RAG 컨텍스트 추가
-        if len(chat.history) == 0:
-            full_message = f"{system_context}{rag_context}{location_context}\n\n사용자: {user_message}"
-        else:
-            full_message = f"{rag_context}{location_context}\n\n사용자: {user_message}"
-        
-        # 응답 시작 문구를 프롬프트에 포함
-        if response_start:
-            full_message += f"\n\n**🚨 매우 중요**: 응답을 반드시 정확히 '{response_start}'로 시작해야 합니다. 다른 인사말이나 문구로 시작하면 안됩니다. 모든 데이터 인용에는 [출처: 파일명] 형태로 출처를 표기해야 합니다. 위의 신한카드 데이터를 반드시 참조하여 답변하세요."
+        full_prompt = "\n\n".join(prompt_parts)
         
         # 캐시 확인 (자주 묻는 질문에 대한 빠른 응답)
         cache_key = user_message.lower().strip()
@@ -625,12 +558,10 @@ def chat():
                     'session_id': session_id
                 }), 500
             
-            # RAG 컨텍스트를 포함한 완전한 프롬프트 (길이 제한)
-            full_prompt = f"{system_context}{rag_context}\n\n사용자 질문: {user_message}"
-            
-            # 프롬프트 길이 제한 (너무 길면 잘라내기)
-            if len(full_prompt) > 8000:
-                full_prompt = f"{system_context}\n\n사용자 질문: {user_message}"
+            # 프롬프트 길이 제한 (1200~1800 토큰 기준, 약 4000~6000자)
+            if len(full_prompt) > 6000:
+                # 시스템 프롬프트만 사용하여 길이 제한
+                full_prompt = f"{system_prompt}\n\n[사용자 질문]\n{user_message}"
                 print("⚠️ 프롬프트가 너무 길어서 RAG 컨텍스트를 제외했습니다.")
             
             # 타임아웃 설정 (30초) - threading 방식
@@ -808,19 +739,330 @@ def reset():
     except Exception as e:
         return jsonify({'error': f'오류가 발생했습니다: {str(e)}'}), 500
 
-@app.route('/api/calendar-events', methods=['GET'])
-def get_calendar_events():
-    """달력 이벤트 데이터 API"""
-    try:
-        events = load_event_data()
-        return jsonify({'events': events})
-    except Exception as e:
-        return jsonify({'error': f'이벤트 데이터 로드 실패: {str(e)}'}), 500
-
 @app.route('/health', methods=['GET'])
 def health_check():
     """헬스체크 엔드포인트"""
     return jsonify({'status': 'ok'}), 200
+
+# ====== 설정 관리 시스템 ======
+
+# 전역 설정 저장소 (실제로는 데이터베이스나 세션에 저장해야 함)
+user_setups = {}
+preloaded_documents = []
+
+@app.route('/api/check-setup', methods=['GET'])
+def check_setup():
+    """설정이 완료되었는지 확인"""
+    try:
+        # 세션 기반으로 설정 확인 (실제로는 더 안전한 방법 사용)
+        setup_info = user_setups.get('default', None)
+        
+        if setup_info:
+            return jsonify({
+                'is_setup': True,
+                'setup_info': setup_info
+            })
+        else:
+            return jsonify({
+                'is_setup': False
+            })
+    except Exception as e:
+        return jsonify({
+            'is_setup': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/setup', methods=['POST'])
+def save_setup():
+    """설정 정보 저장 및 문서 미리 로딩"""
+    try:
+        data = request.json
+        location = data.get('location', '')
+        industry = data.get('industry', '')
+        store_name = data.get('store_name', '')
+        
+        if not location or not industry or not store_name:
+            return jsonify({'error': '모든 정보를 입력해주세요.'}), 400
+        
+        # 설정 정보 저장
+        setup_info = {
+            'location': location,
+            'industry': industry,
+            'store_name': store_name,
+            'created_at': datetime.now().isoformat()
+        }
+        
+        user_setups['default'] = setup_info
+        
+        # L0 프로필 미리 로딩
+        try:
+            profile_text = load_l0_profile(location, industry)
+            print(f"📋 L0 프로필 미리 로딩 완료: {location}_{industry}")
+        except Exception as e:
+            print(f"⚠️ L0 프로필 로딩 실패: {e}")
+        
+        # 관련 문서 미리 로딩 (신한카드 데이터 등)
+        try:
+            preload_relevant_documents(location, industry)
+            print(f"📚 관련 문서 미리 로딩 완료: {location}_{industry}")
+        except Exception as e:
+            print(f"⚠️ 문서 미리 로딩 실패: {e}")
+        
+        return jsonify({
+            'success': True,
+            'message': '설정이 완료되었습니다.',
+            'setup_info': setup_info
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/get-setup', methods=['GET'])
+def get_setup():
+    """저장된 설정 정보 조회"""
+    try:
+        setup_info = user_setups.get('default', None)
+        
+        if setup_info:
+            return jsonify({
+                'success': True,
+                'setup_info': setup_info
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': '설정 정보가 없습니다.'
+            }), 404
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+def preload_relevant_documents(location, industry):
+    """관련 문서 미리 로딩"""
+    try:
+        # 신한카드 데이터에서 관련 스니펫 미리 검색
+        shinhan_file = "documents/raw/신한카드분석.jsonl"
+        if os.path.exists(shinhan_file):
+            relevant_docs = []
+            with open(shinhan_file, 'r', encoding='utf-8') as f:
+                for line in f:
+                    try:
+                        data = json.loads(line)
+                        content = data.get('body', '')
+                        
+                        # 지역 및 업종 관련성 체크
+                        if (location and location in content) or (industry and industry in content):
+                            relevant_docs.append({
+                                'content': content,
+                                'filename': '신한카드분석.jsonl',
+                                'location': location,
+                                'industry': industry
+                            })
+                    except:
+                        continue
+            
+            # 전역 변수에 저장 (실제로는 캐시나 데이터베이스에 저장)
+            global preloaded_documents
+            preloaded_documents = relevant_docs
+            print(f"📚 미리 로딩된 문서: {len(relevant_docs)}개")
+            
+    except Exception as e:
+        print(f"⚠️ 문서 미리 로딩 실패: {e}")
+
+# ====== L0 프로필 및 L1 슬림 RAG 시스템 ======
+
+def load_l0_profile(location, industry):
+    """L0 프로필 문서 로딩 (지역×업종별 맞춤 프로필)"""
+    try:
+        # 프로필 파일 경로 생성
+        profile_path = f"documents/profiles/{location}_{industry}.md"
+        
+        if os.path.exists(profile_path):
+            with open(profile_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            print(f"📋 L0 프로필 로드: {location}_{industry}")
+            return content
+        
+        # 기본 프로필 생성 (파일이 없는 경우)
+        default_profile = generate_default_profile(location, industry)
+        print(f"📋 기본 L0 프로필 생성: {location}_{industry}")
+        return default_profile
+        
+    except Exception as e:
+        print(f"⚠️ L0 프로필 로딩 실패: {e}")
+        return generate_default_profile(location, industry)
+
+def generate_default_profile(location, industry):
+    """기본 L0 프로필 생성"""
+    return f"""# {location} 지역 {industry} 업종 프로필
+
+## 지역 특성
+- {location} 지역의 상권 특성 및 고객층 분석
+- 주변 경쟁업체 현황
+- 접근성 및 교통편
+
+## 업종별 인사이트
+- {industry} 업종의 {location} 지역 적합도
+- 타겟 고객층 특성
+- 성공 사례 및 실패 요인
+
+## 마케팅 전략
+- 지역 맞춤형 홍보 방법
+- 고객 유치 전략
+- 가격 정책 및 서비스 개선 방안
+
+## 참고 데이터
+- 신한카드 데이터 기반 분석 결과
+- 지역 이벤트 및 프로모션 정보"""
+
+def needs_more_context(user_message, profile_text):
+    """L1 슬림 RAG 보강이 필요한지 판단"""
+    # 간단한 키워드 기반 판단
+    need_keywords = ['구체적', '상세한', '자세한', '세부', '분석', '데이터', '통계', '비교', '경쟁사']
+    return any(keyword in user_message for keyword in need_keywords)
+
+def slim_search(user_message, partition, top_k=3):
+    """L1 슬림 RAG 검색 (우선순위 기반 검색)"""
+    try:
+        # 파티션 파싱 (예: "성수:카페")
+        if ':' in partition:
+            region, industry = partition.split(':', 1)
+        else:
+            region, industry = "", ""
+        
+        # 검색어 확장
+        search_terms = [region, industry, "팝업", "이벤트", "소비패턴", "시간대", "대학", "영화", "성수기"]
+        search_query = " ".join([term for term in search_terms if term])
+        
+        relevant_snippets = []
+        
+        # 1순위: 신한카드분석.jsonl에서 INS/RULE/POPUP/상권특성 검색
+        shinhan_file = "documents/raw/신한카드분석.jsonl"
+        if os.path.exists(shinhan_file):
+            with open(shinhan_file, 'r', encoding='utf-8') as f:
+                for line_num, line in enumerate(f, 1):
+                    try:
+                        data = json.loads(line)
+                        content = data.get('body', '')
+                        doc_type = data.get('doc_type', '')
+                        title = data.get('title', '')
+                        
+                        # INS, RULE, POPUP, 상권특성 키워드 우선 검색
+                        if any(keyword in doc_type.lower() or keyword in title.lower() 
+                               for keyword in ['ins', 'rule', 'popup', '상권특성']):
+                            if any(term in content.lower() for term in search_terms if term):
+                                snippet = content[:600]  # 윈도우 400~600자
+                                source_tag = f"신한카드분석.jsonl#{doc_type}-{line_num}"
+                                relevant_snippets.append({
+                                    'content': snippet,
+                                    'source': source_tag,
+                                    'priority': 1,
+                                    'score': 1.0
+                                })
+                        
+                        # 일반적인 관련성 체크 (신한카드 데이터)
+                        relevance_score = 0
+                        if region and region in content:
+                            relevance_score += 2
+                        if industry and industry in content:
+                            relevance_score += 2
+                        
+                        if relevance_score > 0:
+                            snippet = content[:600]
+                            source_tag = f"신한카드분석.jsonl#{doc_type}-{line_num}"
+                            relevant_snippets.append({
+                                'content': snippet,
+                                'source': source_tag,
+                                'priority': 1,
+                                'score': relevance_score
+                            })
+                    except:
+                        continue
+        
+        # 2순위: CSV 파일들에서 검색 (상위 3개만)
+        csv_files = [
+            ("성수 팝업 최종.csv", 2),
+            ("성동구 공통_한양대_흥행영화 이벤트 DB.csv", 2)
+        ]
+        
+        for csv_file, priority in csv_files:
+            csv_path = os.path.join(app.root_path, 'documents', 'raw', csv_file)
+            if os.path.exists(csv_path):
+                try:
+                    df = pd.read_csv(csv_path)
+                    for idx, row in df.iterrows():
+                        row_content = " ".join([str(v) for v in row.values if pd.notna(v)])
+                        if any(term in row_content.lower() for term in search_terms if term):
+                            snippet = row_content[:600]
+                            source_tag = f"{csv_file}#row{idx+1}"
+                            relevant_snippets.append({
+                                'content': snippet,
+                                'source': source_tag,
+                                'priority': priority,
+                                'score': 0.8
+                            })
+                except Exception as e:
+                    print(f"⚠️ CSV 파일 처리 실패 {csv_file}: {e}")
+        
+        # 우선순위와 점수로 정렬 (1순위 신한카드 > 2순위 CSV)
+        relevant_snippets.sort(key=lambda x: (x['priority'], x['score']), reverse=True)
+        
+        # 중복 제거 (유사도 0.9 이상)
+        unique_snippets = []
+        for snippet in relevant_snippets:
+            is_duplicate = False
+            for existing in unique_snippets:
+                if len(set(snippet['content'].split()) & set(existing['content'].split())) / len(set(snippet['content'].split()) | set(existing['content'].split())) > 0.9:
+                    is_duplicate = True
+                    break
+            if not is_duplicate:
+                unique_snippets.append(snippet)
+        
+        # Top-K 선택
+        selected_snippets = unique_snippets[:top_k]
+        
+        # 스니펫 포맷팅
+        if selected_snippets:
+            formatted_snippets = []
+            for i, snippet in enumerate(selected_snippets, 1):
+                formatted_snippets.append(f"[스니펫 {i}] (출처: {snippet['source']})\n{snippet['content']}")
+            
+            result = "\n\n".join(formatted_snippets)
+            print(f"🔍 L1 슬림 RAG 검색 완료: {len(selected_snippets)}개 스니펫 (우선순위: {[s['priority'] for s in selected_snippets]})")
+            return result
+        
+        return ""
+        
+    except Exception as e:
+        print(f"⚠️ L1 슬림 RAG 검색 실패: {e}")
+        return ""
+
+@app.route('/api/calendar-events', methods=['GET'])
+def get_calendar_events():
+    """달력 이벤트 데이터 반환"""
+    try:
+        # CSV 파일 경로
+        csv_file_path = os.path.join(app.root_path, 'documents', 'raw', '성수 팝업 최종.csv')
+        
+        if not os.path.exists(csv_file_path):
+            return jsonify({'error': 'CSV 파일이 존재하지 않습니다.'}), 404
+        
+        events = []
+        with open(csv_file_path, mode='r', encoding='utf-8') as file:
+            reader = csv.DictReader(file)
+            for row in reader:
+                events.append(row)
+        
+        return jsonify({'events': events})
+    except Exception as e:
+        print(f"Error loading calendar events: {e}")
+        return jsonify({'error': '이벤트 로드 중 오류가 발생했습니다.', 'details': str(e)}), 500
 
 if __name__ == '__main__':
     import os

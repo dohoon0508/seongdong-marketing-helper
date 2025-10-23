@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>성동구 마케팅 도우미 - 설정</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #e3f2fd 0%, #f5f5f5 100%);
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4a90e2 0%, #5b7edc 100%);
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+            position: relative;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .rocket-icon {
+            font-size: 24px;
+        }
+
+        h1 {
+            color: white;
+            font-size: 24px;
+            margin: 0;
+        }
+
+        .subtitle {
+            color: rgba(255,255,255,0.8);
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .setup-container {
+            background: white;
+            margin: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            padding: 30px;
+            max-width: 800px;
+            margin: 20px auto;
+        }
+
+        .calendar-title {
+            color: #333;
+            font-size: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+
+        .form-group {
+            margin-bottom: 25px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .form-group select,
+        .form-group input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group select:focus,
+        .form-group input:focus {
+            border-color: #667eea;
+        }
+
+        .custom-input {
+            margin-top: 10px;
+            display: none;
+        }
+
+        .custom-input.show {
+            display: block;
+        }
+
+        .selected-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border-left: 4px solid #4a90e2;
+            text-align: left;
+        }
+
+        .selected-info h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .selected-info p {
+            margin: 8px 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .start-button {
+            width: 100%;
+            padding: 18px;
+            background: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .start-button:hover {
+            background: #3a7bc8;
+        }
+
+        .start-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #dc3545;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #28a745;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 15px;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            h1 {
+                font-size: 20px;
+            }
+            
+            .setup-container {
+                margin: 10px;
+                padding: 20px;
+            }
+            
+            .calendar-title {
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 헤더 -->
+    <div class="header">
+        <div class="header-content">
+            <div class="rocket-icon">🚀</div>
+            <div>
+                <h1>성동구 소상공인 마케팅 도우미</h1>
+                <div class="subtitle">Powered by Google Gemini Flash 2.5</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 설정 컨테이너 -->
+    <div class="setup-container">
+        <h2 class="calendar-title">성동구 마케팅 도우미 설정</h2>
+
+        <div id="errorMessage" class="error-message" style="display: none;"></div>
+        <div id="successMessage" class="success-message" style="display: none;"></div>
+
+        <form id="setupForm">
+            <!-- 지역 선택 -->
+            <div class="form-group">
+                <label for="locationSelect">📍 지역 선택</label>
+                <select id="locationSelect" onchange="updateSelectedInfo()">
+                    <option value="">지역을 선택하세요</option>
+                    <option value="성수">성수</option>
+                    <option value="왕십리">왕십리</option>
+                    <option value="뚝섬">뚝섬</option>
+                    <option value="한양대">한양대</option>
+                    <option value="마장동">마장동</option>
+                    <option value="금남시장">금남시장</option>
+                    <option value="답십리">답십리</option>
+                    <option value="옥수">옥수</option>
+                    <option value="신금호">신금호</option>
+                    <option value="행당">행당</option>
+                    <option value="장한평">장한평</option>
+                    <option value="풍산지구">풍산지구</option>
+                    <option value="화양시장">화양시장</option>
+                    <option value="기타">기타</option>
+                </select>
+            </div>
+
+            <!-- 업종 선택 -->
+            <div class="form-group">
+                <label for="industrySelect">🏪 업종 선택</label>
+                <select id="industrySelect" onchange="updateSelectedInfo()">
+                    <option value="">업종을 선택하세요</option>
+                    <option value="카페">카페</option>
+                    <option value="커피전문점">커피전문점</option>
+                    <option value="한식">한식</option>
+                    <option value="양식">양식</option>
+                    <option value="일식">일식</option>
+                    <option value="중식">중식</option>
+                    <option value="치킨">치킨</option>
+                    <option value="분식">분식</option>
+                    <option value="베이커리">베이커리</option>
+                    <option value="주점">주점</option>
+                    <option value="육류/고기">육류/고기</option>
+                    <option value="백반/가정식">백반/가정식</option>
+                    <option value="단품요리">단품요리</option>
+                    <option value="축산물">축산물</option>
+                    <option value="식료품">식료품</option>
+                    <option value="해물">해물</option>
+                    <option value="직접입력">직접 입력하기</option>
+                </select>
+                
+                <!-- 직접 입력 필드 -->
+                <input type="text" id="customIndustry" class="custom-input" placeholder="업종을 직접 입력하세요" onchange="updateSelectedInfo()">
+            </div>
+
+            <!-- 가게 이름 입력 -->
+            <div class="form-group">
+                <label for="storeNameInput">🏪 가게 이름</label>
+                <input type="text" id="storeNameInput" placeholder="가게 이름을 입력하세요" onchange="updateSelectedInfo()">
+            </div>
+
+            <!-- 선택된 정보 표시 -->
+            <div class="selected-info" id="selectedInfo" style="display: none;">
+                <h3>📋 선택된 정보</h3>
+                <p id="selectedLocation"></p>
+                <p id="selectedIndustry"></p>
+                <p id="selectedStore"></p>
+            </div>
+
+            <!-- 시작 버튼 -->
+            <button type="submit" id="startButton" class="start-button" disabled>
+                🚀 마케팅 도우미 시작하기
+            </button>
+        </form>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <div>문서를 준비하고 있습니다...</div>
+        </div>
+
+    </div>
+
+    <script>
+        function updateSelectedInfo() {
+            const locationSelect = document.getElementById('locationSelect');
+            const industrySelect = document.getElementById('industrySelect');
+            const customIndustry = document.getElementById('customIndustry');
+            const storeNameInput = document.getElementById('storeNameInput');
+            
+            const location = locationSelect.value;
+            let industry = industrySelect.value;
+            const storeName = storeNameInput.value;
+            
+            if (industry === '직접입력') {
+                industry = customIndustry.value;
+                customIndustry.classList.add('show');
+            } else {
+                customIndustry.classList.remove('show');
+            }
+            
+            // 선택된 정보 표시
+            const selectedInfo = document.getElementById('selectedInfo');
+            const selectedLocation = document.getElementById('selectedLocation');
+            const selectedIndustry = document.getElementById('selectedIndustry');
+            const selectedStore = document.getElementById('selectedStore');
+            
+            if (location || industry || storeName) {
+                selectedInfo.style.display = 'block';
+                selectedLocation.textContent = `📍 지역: ${location || '미선택'}`;
+                selectedIndustry.textContent = `🏪 업종: ${industry || '미선택'}`;
+                selectedStore.textContent = `🏪 가게: ${storeName || '미선택'}`;
+            } else {
+                selectedInfo.style.display = 'none';
+            }
+            
+            // 시작 버튼 활성화 조건 체크
+            const startButton = document.getElementById('startButton');
+            if (location && industry && storeName) {
+                startButton.disabled = false;
+                startButton.textContent = '🚀 마케팅 도우미 시작하기';
+            } else {
+                startButton.disabled = true;
+                startButton.textContent = '🚀 마케팅 도우미 시작하기 (모든 정보 입력 필요)';
+            }
+        }
+
+        document.getElementById('setupForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const location = document.getElementById('locationSelect').value;
+            const industry = document.getElementById('industrySelect').value;
+            const customIndustry = document.getElementById('customIndustry').value;
+            const storeName = document.getElementById('storeNameInput').value;
+            
+            let industryValue = industry;
+            if (industry === '직접입력') {
+                industryValue = customIndustry;
+            }
+            
+            if (!location || !industryValue || !storeName) {
+                showError('모든 정보를 입력해주세요.');
+                return;
+            }
+            
+            // 로딩 시작
+            document.getElementById('loading').classList.add('show');
+            document.getElementById('setupForm').style.display = 'none';
+            
+            try {
+                // 설정 정보를 서버에 저장하고 문서 미리 로딩
+                const response = await fetch('/api/setup', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        location: location,
+                        industry: industryValue,
+                        store_name: storeName
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showSuccess('설정이 완료되었습니다! 대화 페이지로 이동합니다.');
+                    
+                    // 2초 후 대화 페이지로 이동
+                    setTimeout(() => {
+                        window.location.href = '/chat';
+                    }, 2000);
+                } else {
+                    showError(data.error || '설정 저장 중 오류가 발생했습니다.');
+                    document.getElementById('loading').classList.remove('show');
+                    document.getElementById('setupForm').style.display = 'block';
+                }
+            } catch (error) {
+                showError('네트워크 오류가 발생했습니다. 다시 시도해주세요.');
+                document.getElementById('loading').classList.remove('show');
+                document.getElementById('setupForm').style.display = 'block';
+            }
+        });
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            document.getElementById('successMessage').style.display = 'none';
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.getElementById('successMessage');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        // 페이지 로드 시 기존 설정 확인
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                const response = await fetch('/api/check-setup');
+                const data = await response.json();
+                
+                if (data.is_setup && data.setup_info) {
+                    // 이미 설정이 되어 있다면 대화 페이지로 이동
+                    window.location.href = '/chat';
+                }
+            } catch (error) {
+                console.log('설정 확인 중 오류:', error);
+            }
+        });
+    </script>
+</body>
+</html>

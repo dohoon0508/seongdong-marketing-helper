@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>성동구 마케팅 도우미 - 대화</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #e3f2fd 0%, #f5f5f5 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            flex: 1;
+        }
+
+        .header-center {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            margin-right: 15px;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 20px;
+            margin: 0;
+        }
+
+        .setup-info {
+            background: #f8f9fa;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border-left: 4px solid #4a90e2;
+        }
+
+        .setup-info h3 {
+            color: #333;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .setup-info p {
+            color: #666;
+            font-size: 12px;
+            margin: 2px 0;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: background 0.3s ease;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            margin: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+
+        .message {
+            display: flex;
+            margin-bottom: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            margin: 0 10px;
+        }
+
+        .message.user .message-avatar {
+            background: #667eea;
+            color: white;
+        }
+
+        .message.assistant .message-avatar {
+            background: #28a745;
+            color: white;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 15px 20px;
+            border-radius: 20px;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            word-wrap: break-word;
+        }
+
+        .message.user .message-content {
+            background: #667eea;
+            color: white;
+        }
+
+        .message.assistant .message-content {
+            background: white;
+            color: #333;
+        }
+
+        .chat-input {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #eee;
+            border-radius: 25px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .chat-input input:focus {
+            border-color: #667eea;
+        }
+
+        .chat-input button {
+            padding: 15px 25px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s ease;
+        }
+
+        .chat-input button:hover {
+            background: #5a6fd8;
+        }
+
+        .chat-input button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .welcome-message {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+
+        .welcome-message h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .welcome-message p {
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        /* 달력 스타일 */
+        .calendar-section {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .calendar-title {
+            color: #333;
+            font-size: 18px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-weight: 600;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .calendar-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .month-navigation {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-button {
+            background: #4a90e2;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        .nav-button:hover {
+            background: #3a7bc8;
+        }
+
+        .current-month {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            min-width: 120px;
+            text-align: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+            background: #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .calendar-header {
+            background: #4a90e2;
+            color: white;
+            padding: 10px 5px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .calendar-day {
+            background: white;
+            min-height: 60px;
+            padding: 5px;
+            border: none;
+            position: relative;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .calendar-day.expanded {
+            min-height: 200px;
+            z-index: 10;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            background: #f8f9fa;
+        }
+
+        .day-number {
+            font-weight: 600;
+            margin-bottom: 3px;
+            color: #333;
+            font-size: 11px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .event-item {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            color: #1976d2;
+            padding: 3px 6px;
+            margin: 2px 0;
+            border-radius: 4px;
+            font-size: 9px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            cursor: pointer;
+            border: 1px solid #90caf9;
+            font-weight: 500;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: all 0.3s ease;
+            box-shadow: 0 1px 3px rgba(33, 150, 243, 0.2);
+        }
+
+        .event-item:hover {
+            background: linear-gradient(135deg, #bbdefb 0%, #90caf9 100%);
+            color: #0d47a1;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(33, 150, 243, 0.3);
+        }
+
+        .event-item.popup {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border-color: #64b5f6;
+        }
+
+        .event-item.exhibition {
+            background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+            color: #2e7d32;
+            border-color: #81c784;
+        }
+
+        .event-item.festival {
+            background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+            color: #7b1fa2;
+            border-color: #ba68c8;
+        }
+
+        .event-item.holiday {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffcc02 100%);
+            color: #f57c00;
+            border-color: #ffb74d;
+        }
+
+        .event-item.movie {
+            background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%);
+            color: #00695c;
+            border-color: #4db6ac;
+        }
+
+        .event-item.event-more {
+            background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+            color: #666;
+            border-color: #ccc;
+            font-style: italic;
+        }
+
+        .event-item.event-collapse {
+            background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+            color: #d32f2f;
+            border-color: #ef9a9a;
+            font-weight: 600;
+        }
+
+        .event-item.event-collapse:hover {
+            background: linear-gradient(135deg, #ffcdd2 0%, #ef9a9a 100%);
+            color: #b71c1c;
+        }
+
+        .event-tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            z-index: 1000;
+            max-width: 200px;
+            white-space: normal;
+            display: none;
+        }
+
+        /* 이벤트 상세 정보 모달 */
+        .event-modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .event-modal.show {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .event-modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 0;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s ease;
+        }
+
+        .event-modal-header {
+            background: linear-gradient(135deg, #4a90e2 0%, #5b7edc 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px 15px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .event-modal-header h3 {
+            margin: 0;
+            font-size: 17px;
+            font-weight: 600;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .event-modal-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background 0.3s ease;
+        }
+
+        .event-modal-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .event-modal-body {
+            padding: 20px;
+        }
+
+        .event-detail-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #4a90e2;
+        }
+
+        .event-detail-icon {
+            margin-right: 10px;
+            font-size: 16px;
+            color: #4a90e2;
+            min-width: 20px;
+        }
+
+        .event-detail-content {
+            flex: 1;
+        }
+
+        .event-detail-label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 3px;
+            font-size: 14px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .event-detail-value {
+            color: #666;
+            font-size: 13px;
+            line-height: 1.5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .event-type-badge {
+            display: inline-block;
+            background: #4a90e2;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .event-modal-footer {
+            padding: 20px;
+            text-align: right;
+            border-top: 1px solid #eee;
+        }
+
+        .event-modal-btn {
+            background: #4a90e2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s ease;
+        }
+
+        .event-modal-btn:hover {
+            background: #3a7bc8;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { 
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 마크다운 스타일링 */
+        .message-content h1, .message-content h2, .message-content h3 {
+            color: #333;
+            margin: 15px 0 10px 0;
+            font-weight: bold;
+        }
+
+        .message-content h1 {
+            font-size: 24px;
+            color: #4a90e2;
+            border-bottom: 2px solid #4a90e2;
+            padding-bottom: 10px;
+        }
+
+        .message-content h2 {
+            font-size: 20px;
+            color: #5b7edc;
+            background: linear-gradient(135deg, #e3f2fd 0%, #f5f5f5 100%);
+            padding: 10px 15px;
+            border-radius: 8px;
+            border-left: 4px solid #4a90e2;
+        }
+
+        .message-content h3 {
+            font-size: 18px;
+            color: #333;
+            background: #f8f9fa;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border-left: 3px solid #4a90e2;
+        }
+
+        .message-content p {
+            line-height: 1.6;
+            margin: 10px 0;
+            color: #444;
+        }
+
+        .message-content ul, .message-content ol {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .message-content li {
+            margin: 8px 0;
+            line-height: 1.5;
+        }
+
+        .message-content strong {
+            color: #4a90e2;
+            font-weight: bold;
+        }
+
+        .message-content code {
+            background: #f1f3f4;
+            color: #e74c3c;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        .message-content blockquote {
+            border-left: 4px solid #4a90e2;
+            background: #f8f9fa;
+            padding: 10px 15px;
+            margin: 15px 0;
+            border-radius: 0 6px 6px 0;
+        }
+
+        .message-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        .message-content th, .message-content td {
+            border: 1px solid #ddd;
+            padding: 8px 12px;
+            text-align: left;
+        }
+
+        .message-content th {
+            background: #4a90e2;
+            color: white;
+            font-weight: bold;
+        }
+
+        .message-content tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        /* TODO 체크박스 스타일 */
+        .message-content input[type="checkbox"] {
+            margin-right: 8px;
+            transform: scale(1.2);
+            accent-color: #4a90e2;
+        }
+
+        .message-content .todo-item {
+            background: #f8f9fa;
+            padding: 8px 12px;
+            margin: 5px 0;
+            border-radius: 6px;
+            border-left: 3px solid #4a90e2;
+            display: flex;
+            align-items: center;
+        }
+
+        /* 출처 스타일 */
+        .message-content .source {
+            color: #666;
+            font-size: 12px;
+            font-style: italic;
+            margin-left: 10px;
+        }
+
+        /* 하이라이트된 텍스트 */
+        .message-content .highlight {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #1976d2;
+            font-weight: bold;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .header-left {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .setup-info {
+                margin-left: 0;
+                margin-top: 10px;
+            }
+
+            .chat-container {
+                margin: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 헤더 -->
+    <div class="header">
+        <div class="header-left">
+            <div class="setup-info" id="setupInfo">
+                <h3>현재 설정</h3>
+                <p id="currentSetup">로딩 중...</p>
+            </div>
+        </div>
+        <div class="header-center">
+            <div class="logo">🤖</div>
+            <h1>성동구 마케팅 도우미</h1>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-secondary" onclick="resetChat()">💬 대화 초기화</button>
+            <button class="btn btn-danger" onclick="goToSetup()">⚙️ 설정 변경</button>
+        </div>
+    </div>
+
+    <!-- 채팅 컨테이너 -->
+    <div class="chat-container">
+        <!-- 달력 섹션 -->
+        <div class="calendar-section">
+            <h3 class="calendar-title">성동구 마케팅 달력</h3>
+            <div class="calendar-controls">
+                <div class="month-navigation">
+                    <button class="nav-button" onclick="prevMonth()">← 이전</button>
+                    <span class="current-month" id="currentMonth">2024년 10월</span>
+                    <button class="nav-button" onclick="nextMonth()">다음 →</button>
+                </div>
+            </div>
+            <div class="calendar-grid" id="calendarGrid">
+                <!-- 달력이 여기에 동적으로 생성됩니다 -->
+            </div>
+        </div>
+
+        <!-- 이벤트 상세 정보 모달 -->
+        <div class="event-modal" id="eventModal">
+            <div class="event-modal-content">
+                <div class="event-modal-header">
+                    <h3 id="modalEventTitle">이벤트 상세 정보</h3>
+                    <button class="event-modal-close" onclick="closeEventModal()">&times;</button>
+                </div>
+                <div class="event-modal-body" id="modalEventBody">
+                    <!-- 이벤트 상세 정보가 여기에 동적으로 추가됩니다 -->
+                </div>
+                <div class="event-modal-footer">
+                    <button class="event-modal-btn" onclick="closeEventModal()">확인</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-messages" id="chatContainer">
+            <div class="welcome-message" id="welcomeMessage">
+                <h2>🎉 마케팅 도우미가 준비되었습니다!</h2>
+                <p>지역, 업종, 가게 정보에 맞는 맞춤형 마케팅 조언을 받아보세요.</p>
+                <p>아래에 질문을 입력하고 Enter를 누르거나 전송 버튼을 클릭하세요.</p>
+            </div>
+        </div>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <div>🤖 AI가 답변을 생성하고 있습니다...</div>
+        </div>
+        
+        <div class="chat-input">
+            <input type="text" id="userInput" placeholder="마케팅 관련 질문을 입력하세요..." onkeypress="handleKeyPress(event)">
+            <button id="sendBtn" onclick="sendMessage()">전송</button>
+        </div>
+    </div>
+
+    <script>
+        const sessionId = 'session_' + Date.now();
+        let isProcessing = false;
+        let setupInfo = null;
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !isProcessing) {
+                sendMessage();
+            }
+        }
+
+        function showLoading() {
+            document.getElementById('loading').classList.add('show');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').classList.remove('show');
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const message = input.value.trim();
+            
+            if (!message || isProcessing) {
+                return;
+            }
+            
+            // 웰컴 메시지 숨기기
+            const welcomeMessage = document.getElementById('welcomeMessage');
+            if (welcomeMessage) {
+                welcomeMessage.style.display = 'none';
+            }
+            
+            // UI 업데이트
+            isProcessing = true;
+            showLoading();
+            
+            // 사용자 메시지 표시
+            addMessage(message, 'user');
+            input.value = '';
+            
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        session_id: sessionId,
+                        message: message
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    addMessage(data.message, 'assistant');
+                } else {
+                    addMessage('오류: ' + (data.error || '응답을 받을 수 없습니다.'), 'assistant');
+                }
+            } catch (error) {
+                addMessage('네트워크 오류가 발생했습니다. 다시 시도해주세요.', 'assistant');
+                console.error('Error:', error);
+            } finally {
+                hideLoading();
+                isProcessing = false;
+            }
+        }
+
+        function addMessage(text, sender) {
+            const chat = document.getElementById('chatContainer');
+            const row = document.createElement('div');
+            row.className = `message ${sender}`;
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'message-avatar';
+            avatar.textContent = sender === 'user' ? '👤' : '🤖';
+            
+            const content = document.createElement('div');
+            content.className = 'message-content';
+            if (sender === 'assistant') {
+                content.innerHTML = text;
+            } else {
+                content.textContent = text;
+            }
+            
+            row.appendChild(avatar);
+            row.appendChild(content);
+            chat.appendChild(row);
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+        async function resetChat() {
+            if (confirm('대화를 초기화하시겠습니까?')) {
+                await fetch('/api/reset', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ session_id: sessionId })
+                });
+                
+                const chat = document.getElementById('chatContainer');
+                chat.innerHTML = '';
+                
+                const welcomeMessage = document.createElement('div');
+                welcomeMessage.className = 'welcome-message';
+                welcomeMessage.id = 'welcomeMessage';
+                welcomeMessage.innerHTML = `
+                    <h2>🎉 대화가 초기화되었습니다!</h2>
+                    <p>새로운 질문을 입력해주세요.</p>
+                `;
+                chat.appendChild(welcomeMessage);
+            }
+        }
+
+        function goToSetup() {
+            if (confirm('설정을 변경하시겠습니까? 현재 대화는 저장되지 않습니다.')) {
+                window.location.href = '/setup';
+            }
+        }
+
+        // 달력 관련 변수 및 함수
+        let currentDate = new Date(2024, 9, 1); // 2024년 10월
+        let events = {}; // 날짜별로 그룹화된 이벤트들
+
+        async function loadEvents() {
+            try {
+                const response = await fetch('/api/calendar-events');
+                const data = await response.json();
+                const rawEvents = data.events || [];
+                
+                // 이벤트를 날짜별로 그룹화
+                events = {};
+                rawEvents.forEach(event => {
+                    // 날짜 형식 변환: 2023.1.20 -> 2023-01-20
+                    const formatDateString = (dateStr) => {
+                        if (!dateStr || dateStr === '' || dateStr === 'undefined') {
+                            console.warn('빈 날짜 데이터 발견:', event);
+                            return null;
+                        }
+                        const parts = dateStr.split('.');
+                        if (parts.length !== 3) {
+                            console.warn('잘못된 날짜 형식:', dateStr);
+                            return null;
+                        }
+                        const year = parts[0];
+                        const month = parts[1].padStart(2, '0');
+                        const day = parts[2].padStart(2, '0');
+                        return `${year}-${month}-${day}`;
+                    };
+                    
+                    const startDateStr = formatDateString(event.Start_Date);
+                    const endDateStr = formatDateString(event.End_Date);
+                    
+                    if (!startDateStr || !endDateStr) {
+                        console.warn('날짜 변환 실패, 이벤트 건너뜀:', event);
+                        return; // 이 이벤트는 건너뜀
+                    }
+                    
+                    const startDate = new Date(startDateStr);
+                    const endDate = new Date(endDateStr);
+                    
+                    // 시작일부터 종료일까지 모든 날짜에 이벤트 추가
+                    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+                        const dateStr = formatDate(d);
+                        if (!events[dateStr]) {
+                            events[dateStr] = [];
+                        }
+                        
+                        // 이벤트 타입에 따른 색상 매핑
+                        let eventType = 'popup';
+                        if (event.Event_Type === '팝업') eventType = 'popup';
+                        else if (event.Event_Type === '전시') eventType = 'exhibition';
+                        else if (event.Event_Type === '축제') eventType = 'festival';
+                        else if (event.Event_Type === '휴일') eventType = 'holiday';
+                        else if (event.Event_Type === '영화') eventType = 'movie';
+                        
+                        events[dateStr].push({
+                            name: event.Event_Name,
+                            type: eventType,
+                            start_date: event.Start_Date,
+                            end_date: event.End_Date,
+                            location: event.Location_Address,
+                            target: event.Target_Audience,
+                            description: event.Event_Description,
+                            event_type: event.Event_Type
+                        });
+                    }
+                });
+                
+                console.log('이벤트 로드됨:', Object.keys(events).length, '개 날짜에 이벤트 있음');
+                console.log('이벤트 데이터 샘플:', events);
+                renderCalendar();
+            } catch (error) {
+                console.error('이벤트 로드 실패:', error);
+                events = {};
+                renderCalendar();
+            }
+        }
+
+        function renderCalendar() {
+            const grid = document.getElementById('calendarGrid');
+            if (!grid) return;
+            
+            grid.innerHTML = '';
+            
+            // 요일 헤더
+            const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+            weekdays.forEach(day => {
+                const header = document.createElement('div');
+                header.className = 'calendar-header';
+                header.textContent = day;
+                grid.appendChild(header);
+            });
+            
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startDate = new Date(firstDay);
+            startDate.setDate(startDate.getDate() - firstDay.getDay());
+            
+            // 42개 셀 생성 (6주 x 7일)
+            for (let i = 0; i < 42; i++) {
+                const cellDate = new Date(startDate);
+                cellDate.setDate(startDate.getDate() + i);
+                
+                const cell = document.createElement('div');
+                cell.className = 'calendar-day';
+                
+                const dayNumber = document.createElement('div');
+                dayNumber.className = 'day-number';
+                dayNumber.textContent = cellDate.getDate();
+                cell.appendChild(dayNumber);
+                
+                // 해당 날짜의 이벤트 추가
+                const dateStr = formatDate(cellDate);
+                if (events[dateStr]) {
+                    const dayEvents = events[dateStr];
+                    dayEvents.slice(0, 3).forEach(event => {
+                        const eventDiv = document.createElement('div');
+                        eventDiv.className = `event-item ${event.type}`;
+                        eventDiv.textContent = event.name;
+                        eventDiv.title = `${event.name} (${event.start_date} - ${event.end_date})`;
+                        eventDiv.onclick = () => showEventModal(event);
+                        cell.appendChild(eventDiv);
+                    });
+                    
+                    // 3개 초과 시 "더보기" 표시
+                    if (dayEvents.length > 3) {
+                        const moreDiv = document.createElement('div');
+                        moreDiv.className = 'event-item event-more';
+                        moreDiv.textContent = `+${dayEvents.length - 3}개 더`;
+                        moreDiv.onclick = (e) => {
+                            e.stopPropagation();
+                            expandCalendarCell(cell, dayEvents);
+                        };
+                        cell.appendChild(moreDiv);
+                    }
+                }
+                
+                // 다른 달의 날짜는 회색으로 표시
+                if (cellDate.getMonth() !== month) {
+                    cell.style.opacity = '0.5';
+                }
+                
+                grid.appendChild(cell);
+            }
+            
+            document.getElementById('currentMonth').textContent = `${year}년 ${month + 1}월`;
+        }
+
+        function formatDate(date) {
+            return `${date.getFullYear()}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getDate().toString().padStart(2, '0')}`;
+        }
+
+        function prevMonth() {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderCalendar();
+        }
+
+        function nextMonth() {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderCalendar();
+        }
+
+        // 이벤트 모달 관련 함수들
+        function showEventModal(event) {
+            const modal = document.getElementById('eventModal');
+            const modalTitle = document.getElementById('modalEventTitle');
+            const modalBody = document.getElementById('modalEventBody');
+            
+            // 이벤트 타입에 따른 배지 색상 설정
+            let typeBadgeClass = 'event-type-badge';
+            if (event.event_type === '팝업') {
+                typeBadgeClass += ' popup';
+            } else if (event.event_type === '전시') {
+                typeBadgeClass += ' exhibition';
+            } else if (event.event_type === '축제') {
+                typeBadgeClass += ' festival';
+            }
+            
+            // 모달 제목 설정
+            modalTitle.innerHTML = `${event.name} <span class="${typeBadgeClass}">${event.event_type}</span>`;
+            
+            // 모달 내용 설정
+            modalBody.innerHTML = `
+                <div class="event-detail-item">
+                    <div class="event-detail-icon">📅</div>
+                    <div class="event-detail-content">
+                        <div class="event-detail-label">기간</div>
+                        <div class="event-detail-value">${event.start_date} ~ ${event.end_date}</div>
+                    </div>
+                </div>
+                
+                <div class="event-detail-item">
+                    <div class="event-detail-icon">📍</div>
+                    <div class="event-detail-content">
+                        <div class="event-detail-label">위치</div>
+                        <div class="event-detail-value">${event.location || '정보 없음'}</div>
+                    </div>
+                </div>
+                
+                <div class="event-detail-item">
+                    <div class="event-detail-icon">👥</div>
+                    <div class="event-detail-content">
+                        <div class="event-detail-label">타겟</div>
+                        <div class="event-detail-value">${event.target || '정보 없음'}</div>
+                    </div>
+                </div>
+                
+                <div class="event-detail-item">
+                    <div class="event-detail-icon">📝</div>
+                    <div class="event-detail-content">
+                        <div class="event-detail-label">설명</div>
+                        <div class="event-detail-value">${event.description || '정보 없음'}</div>
+                    </div>
+                </div>
+            `;
+            
+            // 모달 표시
+            modal.classList.add('show');
+        }
+
+        function closeEventModal() {
+            const modal = document.getElementById('eventModal');
+            modal.classList.remove('show');
+        }
+
+        function expandCalendarCell(cell, dayEvents) {
+            // 이미 확장된 셀인지 확인
+            if (cell.classList.contains('expanded')) {
+                collapseCalendarCell(cell);
+                return;
+            }
+
+            // 모든 다른 확장된 셀들을 축소
+            const allExpandedCells = document.querySelectorAll('.calendar-day.expanded');
+            allExpandedCells.forEach(expandedCell => {
+                collapseCalendarCell(expandedCell);
+            });
+
+            // 현재 셀을 확장
+            cell.classList.add('expanded');
+            
+            // 기존 이벤트들을 모두 제거하고 모든 이벤트를 표시
+            const dayNumber = cell.querySelector('.day-number');
+            cell.innerHTML = '';
+            cell.appendChild(dayNumber);
+            
+            // 모든 이벤트 표시
+            dayEvents.forEach(event => {
+                const eventDiv = document.createElement('div');
+                eventDiv.className = `event-item ${event.type}`;
+                eventDiv.textContent = event.name;
+                eventDiv.title = `${event.name} (${event.start_date} - ${event.end_date})`;
+                eventDiv.onclick = () => showEventModal(event);
+                cell.appendChild(eventDiv);
+            });
+
+            // 축소 버튼 추가
+            const collapseBtn = document.createElement('div');
+            collapseBtn.className = 'event-item event-collapse';
+            collapseBtn.textContent = '접기';
+            collapseBtn.onclick = (e) => {
+                e.stopPropagation();
+                collapseCalendarCell(cell);
+            };
+            cell.appendChild(collapseBtn);
+        }
+
+        function collapseCalendarCell(cell) {
+            cell.classList.remove('expanded');
+            // 원래 상태로 복원하기 위해 달력을 다시 렌더링
+            renderCalendar();
+        }
+
+        // 모달 외부 클릭 시 닫기
+        document.addEventListener('click', function(event) {
+            const modal = document.getElementById('eventModal');
+            if (event.target === modal) {
+                closeEventModal();
+            }
+        });
+
+        // ESC 키로 모달 닫기
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeEventModal();
+            }
+        });
+
+        // 페이지 로드 시 설정 정보 확인 및 달력 렌더링
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                const response = await fetch('/api/get-setup');
+                const data = await response.json();
+                
+                if (data.success && data.setup_info) {
+                    setupInfo = data.setup_info;
+                    document.getElementById('currentSetup').innerHTML = `
+                        📍 ${setupInfo.location} | 🏪 ${setupInfo.industry} | 🏪 ${setupInfo.store_name}
+                    `;
+                } else {
+                    // 설정이 없으면 설정 페이지로 이동
+                    window.location.href = '/setup';
+                }
+            } catch (error) {
+                console.error('설정 정보 로드 실패:', error);
+                window.location.href = '/setup';
+            }
+            
+            // 달력 로드 및 렌더링
+            loadEvents();
+        });
+    </script>
+</body>
+</html>

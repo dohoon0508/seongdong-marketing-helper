@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>성동구 소상공인 마케팅 도우미</title>
+    <title>성동구 마케팅 도우미</title>
     <style>
         * {
             margin: 0;
@@ -12,46 +12,19 @@
         }
 
         body {
-            font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
-            padding: 0;
-            margin: 0;
-            position: relative;
-            overflow-x: hidden;
         }
 
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: 
-                linear-gradient(45deg, transparent 0%, rgba(0, 0, 0, 0.02) 50%, transparent 100%);
-            pointer-events: none;
-            z-index: -1;
-        }
-
-        /* 사이드바 스타일 */
         .sidebar {
-            width: 280px;
-            background: #ffffff;
-            border: 1px solid #e0e0e0;
-            border-radius: 12px;
+            width: 320px;
+            background: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
             padding: 20px;
-            position: fixed;
-            left: 20px;
-            top: 20px;
-            height: auto;
-            max-height: calc(100vh - 40px);
             overflow-y: auto;
-            z-index: 1000;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-            transform: translateX(0);
+            transition: transform 0.3s ease;
         }
 
         .sidebar.collapsed {
@@ -60,27 +33,18 @@
 
         .sidebar-toggle {
             position: fixed;
-            left: 20px;
             top: 20px;
-            width: 40px;
-            height: 40px;
-            background: #007bff;
+            left: 20px;
+            z-index: 1000;
+            background: #667eea;
             color: white;
             border: none;
-            border-radius: 8px;
+            padding: 10px;
+            border-radius: 50%;
             cursor: pointer;
-            z-index: 1001;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            box-shadow: 0 2px 10px rgba(0, 123, 255, 0.3);
+            font-size: 16px;
             transition: all 0.3s ease;
-        }
-
-        .sidebar-toggle:hover {
-            background: #0056b3;
-            transform: scale(1.05);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
         }
 
         .sidebar-toggle.collapsed {
@@ -88,685 +52,60 @@
         }
 
         .sidebar-toggle:not(.collapsed) {
-            left: 320px;
+            left: 340px;
         }
 
-        .sidebar h3 {
-            color: #333 !important;
-            margin-bottom: 20px !important;
-            font-size: 18px !important;
-            font-weight: 600 !important;
-            background: #007bff !important;
-            color: white !important;
-            padding: 10px !important;
-            border-radius: 5px !important;
-            text-align: center !important;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: #555;
-            font-size: 14px;
-        }
-
-        .form-group select,
-        .form-group input {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-            background: #fff;
-            transition: border-color 0.2s;
-        }
-
-        .form-group select:focus,
-        .form-group input:focus {
-            outline: none;
-            border-color: #007bff;
-            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
-        }
-
-        .custom-input {
-            margin-top: 10px;
-        }
-
-        .selected-info {
-            background: #e3f2fd;
-            border: 1px solid #2196f3;
-            border-radius: 6px;
-            padding: 12px;
-            margin-top: 15px;
-        }
-
-        .selected-info h4 {
-            color: #1976d2;
-            margin-bottom: 8px;
-            font-size: 14px;
-        }
-
-        .selected-info p {
-            color: #333;
-            font-size: 13px;
-            margin: 2px 0;
-        }
-
-        /* 메인 컨텐츠 영역 */
         .main-content {
             flex: 1;
-            margin-left: 0;
             display: flex;
             flex-direction: column;
-            min-height: 100vh;
+            margin-left: 0;
             transition: margin-left 0.3s ease;
-            width: calc(100% - 280px) !important;
         }
 
-        .container {
-            width: 100%;
-            max-width: 100%;
-            background: #ffffff;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            padding: 0;
-            margin: 0;
-            border-radius: 0;
-            box-shadow: none;
-            border: none;
+        .main-content.sidebar-open {
+            margin-left: 320px;
         }
 
         .header {
-            background: linear-gradient(135deg, #4A90E2 0%, #6BB6FF 100%);
-            color: white;
-            padding: 32px 40px;
+            background: white;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             text-align: center;
-            box-shadow: 0 4px 16px rgba(74, 144, 226, 0.3);
-            position: relative;
-            border-radius: 0;
-            margin-bottom: 0;
-            overflow: hidden;
         }
-
 
         .header h1 {
+            color: #333;
             font-size: 24px;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: white;
-        }
-
-        .header p {
-            font-size: 14px;
-            opacity: 0.9;
-            font-weight: 400;
-            color: #ecf0f1;
+            margin-bottom: 10px;
         }
 
         .chat-container {
             flex: 1;
-            overflow-y: auto;
-            padding: 0;
-            background: #ffffff;
-            border-radius: 0;
-            box-shadow: none;
-            margin-bottom: 0;
-            position: relative;
             display: flex;
             flex-direction: column;
-        }
-
-        /* 달력 섹션 스타일 */
-        .calendar-section {
-            background: #f8f9fa;
-            border-radius: 0;
-            padding: 24px;
-            margin-bottom: 0;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            border-bottom: 2px solid #e9ecef;
-        }
-
-        .header-title {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 20px;
-        }
-
-        /* 채팅 영역 스타일 */
-        .chat-section {
-            background: #ffffff;
-            padding: 32px;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .chat-section-header {
-            background: linear-gradient(135deg, #4A90E2 0%, #6BB6FF 100%);
-            color: white;
-            padding: 18px 28px;
-            margin: -32px -32px 24px -32px;
-            border-radius: 0;
-            font-size: 18px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            box-shadow: 0 4px 16px rgba(74, 144, 226, 0.3);
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-
-        .calendar-header-section h2 {
-            color: #4A90E2;
-            margin: 0;
-            font-size: 22px;
-            text-align: center;
-            font-weight: 700;
-            text-shadow: 0 2px 4px rgba(74, 144, 226, 0.2);
-        }
-
-        .calendar-controls {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .month-navigation {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .nav-button {
-            background: linear-gradient(135deg, #4A90E2 0%, #6BB6FF 100%);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
-        }
-
-        .nav-button:hover {
-            background: linear-gradient(135deg, #357ABD 0%, #4A90E2 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(74, 144, 226, 0.4);
-        }
-
-        .current-month {
-            font-size: 20px;
-            font-weight: 700;
-            color: #4A90E2;
-            text-shadow: 0 2px 4px rgba(74, 144, 226, 0.2);
-        }
-
-        .event-filters {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .filter-button {
-            padding: 10px 20px;
-            border: 1px solid #B3D9FF;
-            background: linear-gradient(135deg, #E3F2FD 0%, #ffffff 100%);
-            color: #4A90E2;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.15);
-        }
-
-        .filter-button:hover {
-            background: linear-gradient(135deg, #B3D9FF 0%, #E3F2FD 100%);
-            border-color: #4A90E2;
-            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.25);
-            transform: translateY(-2px);
-        }
-
-        .filter-button.active {
-            background: linear-gradient(135deg, #4A90E2 0%, #6BB6FF 100%);
-            color: white;
-            border-color: #4A90E2;
-            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.4);
-        }
-
-        /* 문서 관리 스타일 */
-        .document-management {
-            margin-top: 20px;
-            padding: 15px;
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            border-radius: 12px;
-            border: 1px solid rgba(0, 0, 0, 0.1);
-        }
-
-        .document-management h4 {
-            margin: 0 0 10px 0;
-            color: #495057;
-            font-size: 14px;
-        }
-
-        .doc-actions {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 10px;
-        }
-
-        .doc-button {
-            padding: 6px 12px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: 500;
-            transition: all 0.2s ease;
-        }
-
-        .doc-button:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-        }
-
-        .document-list {
             background: white;
-            border-radius: 8px;
-            padding: 10px;
-            border: 1px solid rgba(0, 0, 0, 0.1);
-        }
-
-        .document-item {
-            padding: 8px;
-            margin: 4px 0;
-            background: #f8f9fa;
-            border-radius: 6px;
-            font-size: 12px;
-            color: #495057;
-        }
-
-        /* 달력 컨테이너 */
-        .calendar-container {
-            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-            border-radius: 12px;
-            padding: 28px;
-            box-shadow: 0 6px 20px rgba(74, 144, 226, 0.15);
-            border: 2px solid #B3D9FF;
-            margin-top: 20px;
-        }
-
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 3px;
-            background: linear-gradient(135deg, #E3F2FD 0%, #B3D9FF 100%);
-            border-radius: 8px;
+            margin: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
             overflow: hidden;
-            border: 2px solid #B3D9FF;
-            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.1);
         }
 
-        .calendar-header {
-            background: linear-gradient(135deg, #4A90E2 0%, #6BB6FF 100%);
-            color: white;
-            padding: 16px 8px;
-            text-align: center;
-            font-weight: 700;
-            font-size: 14px;
-            border-bottom: 1px solid #357ABD;
-            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-        }
-
-        .calendar-day {
-            background: #ffffff;
-            min-height: 150px;
-            padding: 12px;
-            border-right: 1px solid #e9ecef;
-            border-bottom: 1px solid #e9ecef;
-            position: relative;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            flex-direction: column;
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
             overflow-y: auto;
-            max-height: 200px;
-        }
-
-        .calendar-day:hover {
-            background: #e3f2fd;
-            box-shadow: inset 0 0 0 2px #1976d2;
-        }
-
-        .calendar-day.other-month {
             background: #f8f9fa;
-            color: #adb5bd;
-        }
-
-        .calendar-day.today {
-            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-            color: #1976d2;
-            border: 2px solid #1976d2;
-            box-shadow: 0 2px 8px rgba(25, 118, 210, 0.2);
-        }
-
-        .calendar-day.today .day-number {
-            color: #1976d2;
-            font-weight: 700;
-        }
-
-        .day-number {
-            font-weight: 600;
-            font-size: 14px;
-            margin-bottom: 4px;
-            color: #333;
-        }
-
-        .holiday {
-            color: #e74c3c;
-            font-weight: 600;
-            font-size: 9px;
-            background: rgba(231, 76, 60, 0.1);
-            padding: 2px 4px;
-            border-radius: 3px;
-            display: inline-block;
-            margin-bottom: 3px;
-        }
-
-        /* 연속 이벤트 오버레이 막대 */
-        .continuous-event-bar {
-            position: absolute;
-            height: 18px;
-            background: #3498db;
-            border-radius: 4px;
-            color: white;
-            font-size: 8px;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            z-index: 10;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-        }
-
-        .continuous-event-bar:hover {
-            opacity: 0.8;
-            transform: scaleY(1.05);
-        }
-
-        .continuous-event-bar.start {
-            border-top-left-radius: 6px;
-            border-bottom-left-radius: 6px;
-            border-top-right-radius: 0;
-            border-bottom-right-radius: 0;
-        }
-
-        .continuous-event-bar.middle {
-            border-radius: 0;
-        }
-
-        .continuous-event-bar.end {
-            border-top-left-radius: 0;
-            border-bottom-left-radius: 0;
-            border-top-right-radius: 6px;
-            border-bottom-right-radius: 6px;
-        }
-
-        .continuous-event-bar.single {
-            border-radius: 6px;
-        }
-
-        /* 단일 이벤트 바 */
-        .event-bar {
-            height: 20px;
-            margin: 3px 0;
-            border-radius: 6px;
-            color: white;
-            font-size: 9px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-        }
-
-        .event-bar:hover {
-            opacity: 0.9;
-            transform: translateY(-1px);
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-        }
-
-        .event-general {
-            background: linear-gradient(135deg, #3498db, #2980b9);
-        }
-
-        .event-popup {
-            background: linear-gradient(135deg, #e74c3c, #c0392b);
-        }
-
-        .event-university {
-            background: linear-gradient(135deg, #9b59b6, #8e44ad);
-        }
-
-        .event-movie {
-            background: linear-gradient(135deg, #f39c12, #e67e22);
-        }
-
-        .event-more {
-            background: linear-gradient(135deg, #6c757d, #5a6268);
-            text-align: center;
-            font-weight: 600;
         }
 
         .message {
-            margin-bottom: 24px;
             display: flex;
-            align-items: flex-start;
-            gap: 16px;
-            animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            z-index: 1;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px) scale(0.95);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
+            margin-bottom: 20px;
+            animation: fadeIn 0.3s ease;
         }
 
         .message.user {
             flex-direction: row-reverse;
-        }
-
-        .message-avatar {
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            font-weight: bold;
-            flex-shrink: 0;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            transition: transform 0.3s ease;
-        }
-
-        .message-avatar:hover {
-            transform: scale(1.05);
-        }
-
-        .message.user .message-avatar {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-
-        .message.assistant .message-avatar {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            color: white;
-        }
-
-        .message-content {
-            max-width: 75%;
-            padding: 18px 24px;
-            border-radius: 24px;
-            word-wrap: break-word;
-            line-height: 1.7;
-            font-size: 15px;
-            position: relative;
-            backdrop-filter: blur(10px);
-        }
-
-        .message.user .message-content {
-            background: linear-gradient(135deg, #4A90E2 0%, #6BB6FF 100%);
-            color: white;
-            border-bottom-right-radius: 8px;
-            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
-        }
-
-        .message.assistant .message-content {
-            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-            color: #2c3e50;
-            border: 1px solid #B3D9FF;
-            border-bottom-left-radius: 8px;
-            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.15);
-        }
-
-        /* 마크다운 스타일링 - 미니멀 */
-        .message-content h1 {
-            color: #2c3e50;
-            font-size: 20px;
-            font-weight: 600;
-            margin: 16px 0 12px 0;
-            border-bottom: 2px solid #2c3e50;
-            padding-bottom: 6px;
-        }
-
-        .message-content h2 {
-            color: #2c3e50;
-            font-size: 18px;
-            font-weight: 600;
-            margin: 14px 0 10px 0;
-            border-bottom: 1px solid #2c3e50;
-            padding-bottom: 4px;
-        }
-
-        .message-content h3 {
-            color: #2c3e50;
-            font-size: 16px;
-            font-weight: 600;
-            margin: 12px 0 8px 0;
-        }
-
-        .message-content h4 {
-            color: #2c3e50;
-            font-size: 14px;
-            font-weight: 600;
-            margin: 10px 0 6px 0;
-        }
-
-        .message-content h5, .message-content h6 {
-            color: #2c3e50;
-            font-size: 13px;
-            font-weight: 600;
-            margin: 8px 0 4px 0;
-        }
-
-        .message-content ul, .message-content ol {
-            margin: 15px 0;
-            padding-left: 25px;
-        }
-
-        .message-content li {
-            margin: 8px 0;
-            line-height: 1.6;
-            font-size: 15px;
-        }
-
-        .message-content strong, .message-content b {
-            color: #667eea;
-            font-weight: 700;
-            font-size: 16px;
-        }
-
-        .message-content em, .message-content i {
-            color: #764ba2;
-            font-style: italic;
-            font-weight: 500;
-        }
-
-        .message-content code {
-            background: #f0f0f0;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
-        }
-
-        .message-content blockquote {
-            border-left: 4px solid #667eea;
-            padding-left: 15px;
-            margin: 15px 0;
-            color: #666;
-            font-style: italic;
-        }
-
-        .message-content a {
-            color: #667eea;
-            text-decoration: none;
-        }
-
-        .message-content a:hover {
-            text-decoration: underline;
-        }
-
-        .message-content table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 15px 0;
-        }
-
-        .message-content th, .message-content td {
-            border: 1px solid #e0e0e0;
-            padding: 8px 12px;
-            text-align: left;
-        }
-
-        .message-content th {
-            background: #f8f9fa;
-            font-weight: 600;
-            color: #667eea;
         }
 
         .message-avatar {
@@ -778,441 +117,264 @@
             justify-content: center;
             font-size: 18px;
             margin: 0 10px;
-            flex-shrink: 0;
         }
 
         .message.user .message-avatar {
             background: #667eea;
+            color: white;
         }
 
         .message.assistant .message-avatar {
-            background: #f0f0f0;
+            background: #28a745;
+            color: white;
         }
 
-        .input-container {
-            padding: 20px 30px;
+        .message-content {
+            max-width: 70%;
+            padding: 15px 20px;
+            border-radius: 20px;
             background: white;
-            border-top: 1px solid #e0e0e0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            word-wrap: break-word;
+        }
+
+        .message.user .message-content {
+            background: #667eea;
+            color: white;
+        }
+
+        .message.assistant .message-content {
+            background: white;
+            color: #333;
+        }
+
+        .chat-input {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #eee;
             display: flex;
             gap: 10px;
         }
 
-        .input-wrapper {
+        .chat-input input {
             flex: 1;
-            position: relative;
-        }
-
-        #userInput {
-            width: 100%;
-            padding: 14px 18px;
-            border: 2px solid #B3D9FF;
-            border-radius: 8px;
-            font-size: 15px;
+            padding: 15px;
+            border: 2px solid #eee;
+            border-radius: 25px;
+            font-size: 16px;
             outline: none;
-            transition: all 0.3s ease;
-            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-            color: #2c3e50;
-            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.15);
+            transition: border-color 0.3s ease;
         }
 
-        #userInput:focus {
-            border-color: #4A90E2;
-            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
-            background: #ffffff;
+        .chat-input input:focus {
+            border-color: #667eea;
         }
 
-        #userInput::placeholder {
-            color: #B3D9FF;
-            font-weight: 500;
-        }
-
-        button {
-            padding: 12px 24px;
-            border: 1px solid #dee2e6;
-            border-radius: 4px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            outline: none;
-        }
-
-        #sendBtn {
-            background: linear-gradient(135deg, #4A90E2 0%, #6BB6FF 100%);
+        .chat-input button {
+            padding: 15px 25px;
+            background: #667eea;
             color: white;
-            border-color: #4A90E2;
-            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s ease;
         }
 
-        #sendBtn:hover:not(:disabled) {
-            background: linear-gradient(135deg, #357ABD 0%, #4A90E2 100%);
-            border-color: #357ABD;
-            box-shadow: 0 6px 16px rgba(74, 144, 226, 0.4);
-            transform: translateY(-2px);
+        .chat-input button:hover {
+            background: #5a6fd8;
         }
 
-        #sendBtn:disabled {
-            opacity: 0.6;
+        .chat-input button:disabled {
+            background: #ccc;
             cursor: not-allowed;
         }
 
-        #resetBtn {
-            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-            color: #2c3e50;
-            border-color: #B3D9FF;
-            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.15);
-        }
-
-        #resetBtn:hover {
-            background: linear-gradient(135deg, #E3F2FD 0%, #B3D9FF 100%);
-            border-color: #4A90E2;
-            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.25);
-            transform: translateY(-1px);
-        }
-
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 10px;
-            color: #666;
-            font-size: 14px;
-        }
-
-        .loading.active {
-            display: block;
-        }
-
-        /* 이벤트 모달 스타일 */
-        .event-modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-            opacity: 0;
-            transition: opacity 0.2s ease;
-        }
-
-        .event-modal-overlay.show {
-            opacity: 1;
-        }
-
-        .event-modal-container {
-            background: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-            border: 1px solid #e9ecef;
-            max-width: 500px;
-            width: 90%;
-            max-height: 80vh;
-            overflow: hidden;
-            transform: scale(0.95) translateY(10px);
-            transition: transform 0.2s ease;
-        }
-
-        .event-modal-overlay.show .event-modal-container {
-            transform: scale(1) translateY(0);
-        }
-
-        .event-modal-header {
-            background: #2c3e50;
-            color: white;
-            padding: 20px 24px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .event-modal-header h2 {
-            font-size: 18px;
-            font-weight: 600;
-            margin: 0;
-            color: white;
-        }
-
-        .modal-close-btn {
-            background: rgba(255, 255, 255, 0.1);
-            border: none;
-            color: white;
-            width: 28px;
-            height: 28px;
-            border-radius: 4px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            font-weight: bold;
-            transition: all 0.2s ease;
-        }
-
-        .modal-close-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        .event-modal-content {
-            padding: 24px;
-            max-height: 60vh;
-            overflow-y: auto;
-        }
-
-        .event-detail-card {
-            background: #ffffff;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            border: 1px solid #e9ecef;
-        }
-
-        .event-title {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 24px;
-            gap: 16px;
-        }
-
-        .event-title h3 {
-            font-size: 18px;
-            font-weight: 600;
-            color: #2c3e50;
-            margin: 0;
-            flex: 1;
-            line-height: 1.3;
-        }
-
-        .event-type-badge {
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: 500;
-            color: white;
-            white-space: nowrap;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-        }
-
-        .event-type-badge.event-general {
-            background: #3498db;
-        }
-
-        .event-type-badge.event-popup {
-            background: #e74c3c;
-        }
-
-        .event-type-badge.event-university {
-            background: #9b59b6;
-        }
-
-        .event-type-badge.event-movie {
-            background: #f39c12;
-        }
-
-        .event-info-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        .info-item {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .info-item.full-width {
-            grid-column: 1 / -1;
-        }
-
-        .info-label {
-            font-size: 12px;
-            font-weight: 600;
-            color: #6c757d;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .info-value {
-            font-size: 14px;
-            color: #2c3e50;
-            line-height: 1.4;
-            word-break: break-word;
-        }
-
-        .event-modal-footer {
-            padding: 16px 24px;
-            background: #f8f9fa;
-            border-top: 1px solid #e9ecef;
-            display: flex;
-            justify-content: flex-end;
-        }
-
-        .modal-confirm-btn {
-            background: #2c3e50;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 2px 4px rgba(44, 62, 80, 0.2);
-        }
-
-        .modal-confirm-btn:hover {
-            background: #34495e;
-            box-shadow: 0 4px 8px rgba(44, 62, 80, 0.3);
-        }
-
-        .loading-dots {
-            display: inline-block;
-        }
-
-        .loading-dots span {
-            animation: blink 0.8s infinite;
-            display: inline-block;
-            font-weight: bold;
-        }
-
-        .loading-dots span:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-
-        .loading-dots span:nth-child(3) {
-            animation-delay: 0.4s;
-        }
-
-        .typing-indicator {
-            background: #f0f0f0;
-            padding: 15px 20px;
-            border-radius: 18px;
-            border-bottom-left-radius: 4px;
+        .form-group {
             margin-bottom: 20px;
-            display: none;
-            align-items: center;
-            gap: 10px;
         }
 
-        .typing-indicator.active {
-            display: flex;
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
         }
 
-        .typing-dots {
-            display: flex;
-            gap: 4px;
+        .form-group select,
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #eee;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s ease;
         }
 
-        .typing-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #667eea;
-            animation: typing 1.4s infinite ease-in-out;
+        .form-group select:focus,
+        .form-group input:focus {
+            border-color: #667eea;
         }
 
-        .typing-dot:nth-child(2) {
-            animation-delay: 0.2s;
+        .selected-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #28a745;
         }
 
-        .typing-dot:nth-child(3) {
-            animation-delay: 0.4s;
+        .selected-info h4 {
+            color: #333;
+            margin-bottom: 10px;
         }
 
-        @keyframes typing {
-            0%, 60%, 100% {
-                transform: translateY(0);
-                opacity: 0.5;
-            }
-            30% {
-                transform: translateY(-10px);
-                opacity: 1;
-            }
+        .selected-info p {
+            margin: 5px 0;
+            color: #666;
         }
 
-        @keyframes blink {
-            0%, 80%, 100% {
-                opacity: 0;
-            }
-            40% {
-                opacity: 1;
-            }
+        .start-button {
+            width: 100%;
+            padding: 15px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s ease;
         }
 
-        .welcome-message {
+        .start-button:hover {
+            background: #218838;
+        }
+
+        .start-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .chat-lock-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .chat-lock-badge.lock {
+            background: #dc3545;
+            color: white;
+        }
+
+        .chat-lock-badge.ready {
+            background: #28a745;
+            color: white;
+        }
+
+        .onboarding {
             text-align: center;
             padding: 40px 20px;
             color: #666;
         }
 
-        .welcome-message h2 {
-            color: #667eea;
-            margin-bottom: 15px;
-            font-size: 28px;
+        .onboarding h3 {
+            margin-bottom: 20px;
+            color: #333;
         }
 
-        .welcome-message p {
-            margin-bottom: 10px;
-            line-height: 1.6;
-        }
-
-        .suggestions {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-top: 30px;
-        }
-
-        .suggestion-card {
-            background: white;
+        .loading {
+            display: none;
+            text-align: center;
             padding: 20px;
-            border-radius: 15px;
-            border: 2px solid #e0e0e0;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .suggestion-card:hover {
-            border-color: #667eea;
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
-        }
-
-        .suggestion-card h3 {
-            font-size: 16px;
-            color: #667eea;
-            margin-bottom: 8px;
-        }
-
-        .suggestion-card p {
-            font-size: 13px;
             color: #666;
         }
 
+        .loading.show {
+            display: block;
+        }
+
+        .document-list {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .document-item {
+            background: white;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border-left: 3px solid #667eea;
+        }
+
+        .calendar-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .calendar-header {
+            text-align: center;
+            padding: 10px;
+            background: #667eea;
+            color: white;
+            border-radius: 5px;
+            font-weight: 600;
+        }
+
+        .calendar-day {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .day-number {
+            font-weight: 600;
+            color: #333;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         @media (max-width: 768px) {
-            .container {
+            .sidebar {
+                width: 100%;
+                position: fixed;
+                top: 0;
+                left: 0;
                 height: 100vh;
-                max-height: none;
-                border-radius: 0;
+                z-index: 999;
             }
 
-            .message-content {
-                max-width: 85%;
+            .main-content {
+                margin-left: 0;
             }
 
-            .header h1 {
-                font-size: 20px;
-            }
-
-            .suggestions {
-                grid-template-columns: 1fr;
+            .main-content.sidebar-open {
+                margin-left: 0;
             }
         }
     </style>
@@ -1225,7 +387,7 @@
 
     <!-- 사이드바 -->
     <div class="sidebar" id="sidebar">
-        <h3>🎯 지역 & 업종 설정</h3>
+        <h3>🎯 지역 & 업종 & 가게 설정</h3>
         
         <!-- 지역 선택 -->
         <div class="form-group">
@@ -1277,206 +439,227 @@
             <input type="text" id="customIndustry" class="custom-input" placeholder="업종을 직접 입력하세요" style="display: none;" onchange="updateSelectedInfo()">
         </div>
 
+        <!-- 가게 이름 입력 -->
+        <div class="form-group">
+            <label for="storeNameInput">🏪 가게 이름</label>
+            <input type="text" id="storeNameInput" placeholder="가게 이름을 입력하세요" onchange="updateSelectedInfo()">
+        </div>
+
         <!-- 선택된 정보 표시 -->
         <div class="selected-info" id="selectedInfo" style="display: none;">
             <h4>📋 선택된 정보</h4>
             <p id="selectedLocation"></p>
             <p id="selectedIndustry"></p>
+            <p id="selectedStore"></p>
         </div>
         
-        <!-- 적용 버튼 -->
+        <!-- LLM 시작 버튼 -->
         <div style="margin-top: 15px;">
-            <button onclick="applySettings()" style="width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">
-                ✅ 설정 적용
+            <button id="startButton" class="start-button" onclick="startLLM()" disabled>
+                🚀 LLM 시작
             </button>
+        </div>
+
+        <!-- 문서 관리 -->
+        <div style="margin-top: 20px;">
+            <button onclick="reloadDocuments()" style="width: 100%; padding: 10px; background: #17a2b8; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                📚 문서 새로고침
+            </button>
+            <button onclick="showDocumentList()" style="width: 100%; padding: 10px; background: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer; margin-top: 5px;">
+                📄 문서 목록
+            </button>
+            <div id="documentList" class="document-list" style="display: none;"></div>
+        </div>
+
+        <!-- 달력 (데모) -->
+        <div class="calendar-section">
+            <h4>📅 이벤트 달력</h4>
+            <div id="currentMonth"></div>
+            <div id="calendarGrid" class="calendar-grid"></div>
         </div>
     </div>
 
     <!-- 메인 컨텐츠 -->
-    <div class="main-content">
-        <div class="container">
+    <div class="main-content" id="mainContent">
+        <!-- 헤더 -->
         <div class="header">
-            <h1>🚀 성동구 소상공인 마케팅 도우미</h1>
-            <p>Powered by Google Gemini Flash 2.5</p>
+            <h1>🤖 성동구 마케팅 도우미</h1>
+            <span id="chatLockBadge" class="chat-lock-badge lock">잠금 (설정 필요)</span>
         </div>
-        
-        <!-- 달력 섹션 -->
-        <div class="calendar-section" id="calendarSection">
-                <div class="calendar-header-section">
-                    <div class="header-title">
-                        <h2>성동구 마케팅 달력</h2>
-                    </div>
-                    <div class="calendar-controls">
-                        <div class="month-navigation">
-                            <button class="nav-button" onclick="changeMonth(-1)">◀ 이전</button>
-                            <div class="current-month" id="currentMonth">2024년 10월</div>
-                            <button class="nav-button" onclick="changeMonth(1)">다음 ▶</button>
-                        </div>
-                        <div class="event-filters">
-                            <button class="filter-button active" data-filter="all">전체</button>
-                            <button class="filter-button" data-filter="general">일반 이벤트</button>
-                            <button class="filter-button" data-filter="popup">팝업</button>
-                            <button class="filter-button" data-filter="university">대학 이벤트</button>
-                            <button class="filter-button" data-filter="movie">영화</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="calendar-container">
-                    <div class="calendar-grid" id="calendarGrid">
-                        <!-- 달력이 여기에 동적으로 생성됩니다 -->
-                    </div>
-                </div>
-            </div>
 
-        <!-- 채팅 섹션 -->
-        <div class="chat-section">
-            <div class="chat-section-header">
-                💬 마케팅 상담
-        </div>
-        
-        <div class="chat-container" id="chatContainer">
-            <div class="typing-indicator" id="typingIndicator">
-                <div class="message-avatar">🤖</div>
-                <div class="typing-dots">
-                    <div class="typing-dot"></div>
-                    <div class="typing-dot"></div>
-                    <div class="typing-dot"></div>
+        <!-- 채팅 컨테이너 -->
+        <div class="chat-container">
+            <div class="chat-messages" id="chatContainer">
+                <div class="onboarding" id="onboarding">
+                    <h3>먼저 좌측에서 <strong>지역·업종·가게 이름</strong>을 선택하고 <strong>LLM 시작</strong>을 눌러주세요.</h3>
                 </div>
             </div>
-            <div class="welcome-message" id="welcomeMessage">
-                <h2>안녕하세요! 👋</h2>
-                <p>성동구 지역 소상공인을 위한 마케팅 도우미입니다.</p>
-                <p>마케팅 전략, SNS 홍보, 고객 유치 등 무엇이든 물어보세요!</p>
-                
-                
-                <div class="document-management">
-                    <h4>📚 문서 관리</h4>
-                    <div class="doc-actions">
-                        <button class="doc-button" onclick="reloadDocuments()">🔄 문서 새로고침</button>
-                        <button class="doc-button" onclick="showDocumentList()">📋 문서 목록</button>
-                    </div>
-                    <div id="documentList" class="document-list" style="display: none;"></div>
+            
+            <div class="loading" id="loading">
+                <div>🤖 AI가 답변을 생성하고 있습니다...</div>
             </div>
-        </div>
-        
-        <div class="loading" id="loading">
-            <div class="loading-dots">
-                응답을 생성하고 있습니다<span>.</span><span>.</span><span>.</span>
-                </div>
+            
+            <div class="chat-input">
+                <input type="text" id="userInput" placeholder="질문을 입력하세요..." onkeypress="handleKeyPress(event)">
+                <button id="sendBtn" onclick="sendMessage()">전송</button>
             </div>
-        </div>
-        
-        <div class="input-container">
-            <button id="resetBtn" onclick="resetChat()">🔄 초기화</button>
-            <div class="input-wrapper">
-                <input 
-                    type="text" 
-                    id="userInput" 
-                    placeholder="메시지를 입력하세요..."
-                    onkeypress="handleKeyPress(event)"
-                />
-            </div>
-            <button id="sendBtn" onclick="sendMessage()">전송</button>
         </div>
     </div>
 
     <script>
         const sessionId = 'session_' + Date.now();
         let isProcessing = false;
+        let llmReady = false;
+        let contextMeta = {
+            region: null,
+            industry: null,
+            store: null,
+            systemPrompt: ""
+        };
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            const toggleIcon = document.getElementById('toggle-icon');
+            
+            sidebar.classList.toggle('collapsed');
+            
+            if (sidebar.classList.contains('collapsed')) {
+                mainContent.classList.remove('sidebar-open');
+                toggleIcon.textContent = '☰';
+            } else {
+                mainContent.classList.add('sidebar-open');
+                toggleIcon.textContent = '✕';
+            }
+        }
+
+        function updateSelectedInfo() {
+            const locationSelect = document.getElementById('locationSelect');
+            const industrySelect = document.getElementById('industrySelect');
+            const customIndustry = document.getElementById('customIndustry');
+            const storeNameInput = document.getElementById('storeNameInput');
+            
+            const location = locationSelect.value;
+            let industry = industrySelect.value;
+            const storeName = storeNameInput.value;
+            
+            if (industry === '직접입력') {
+                industry = customIndustry.value;
+                customIndustry.style.display = 'block';
+            } else {
+                customIndustry.style.display = 'none';
+            }
+            
+            // 선택된 정보 표시
+            const selectedInfo = document.getElementById('selectedInfo');
+            const selectedLocation = document.getElementById('selectedLocation');
+            const selectedIndustry = document.getElementById('selectedIndustry');
+            const selectedStore = document.getElementById('selectedStore');
+            
+            if (location || industry || storeName) {
+                selectedInfo.style.display = 'block';
+                selectedLocation.textContent = `📍 지역: ${location || '미선택'}`;
+                selectedIndustry.textContent = `🏪 업종: ${industry || '미선택'}`;
+                selectedStore.textContent = `🏪 가게: ${storeName || '미선택'}`;
+            } else {
+                selectedInfo.style.display = 'none';
+            }
+            
+            // LLM 시작 버튼 활성화 조건 체크
+            const startButton = document.getElementById('startButton');
+            if (location && industry && storeName) {
+                startButton.disabled = false;
+                startButton.textContent = '🚀 LLM 시작';
+            } else {
+                startButton.disabled = true;
+                startButton.textContent = '🚀 LLM 시작 (모든 정보 입력 필요)';
+            }
+        }
+
+        function startLLM() {
+            const location = document.getElementById('locationSelect').value;
+            const industry = document.getElementById('industrySelect').value;
+            const customIndustry = document.getElementById('customIndustry').value;
+            const storeName = document.getElementById('storeNameInput').value;
+            
+            let industryValue = industry;
+            if (industry === '직접입력') {
+                industryValue = customIndustry;
+            }
+            
+            if (!location || !industryValue || !storeName) {
+                alert('지역, 업종, 가게 이름을 모두 입력해주세요.');
+                return;
+            }
+            
+            // 컨텍스트 메타데이터 설정
+            contextMeta.region = location;
+            contextMeta.industry = industryValue;
+            contextMeta.store = storeName;
+            
+            // 시스템 프롬프트 생성
+            contextMeta.systemPrompt = `[SYSTEM / ROLE]
+너는 성동구 소상공인 맞춤 마케팅 어시스턴트다. 답변은 한국어로, 실행 가능한 TODO 중심으로 간결하게 작성한다.
+
+[CONTEXT SOURCING RULE]
+1) 기본적으로 아래 (지역×업종) 프로필 문서(L0)만 사용한다.
+2) L0에 근거가 부족할 때만 동일 (지역, 업종) 파티션에서 Top-3 슬림 RAG(L1) 스니펫을 보강한다.
+3) 모든 주장에는 (출처: ID,ID) 형식으로 근거를 표기한다. 임의 추정 금지.
+
+[SELECTION]
+- REGION: ${location}
+- INDUSTRY: ${industryValue}
+- STORE_NAME: ${storeName}
+
+[OUTPUT STYLE]
+① 2~3문장 핵심 요약 → ② 이번 주 TODO(체크박스 3~5개) → ③ 근거/출처 ID 나열.
+첫 문장은 반드시 "${location} 지역의 ${industryValue} 사장님을 위한 솔루션입니다."로 시작한다.`;
+            
+            // LLM 준비 완료 상태로 변경
+            llmReady = true;
+            
+            // UI 업데이트
+            document.getElementById('userInput').disabled = false;
+            document.getElementById('sendBtn').disabled = false;
+            document.getElementById('chatLockBadge').textContent = '준비 완료';
+            document.getElementById('chatLockBadge').classList.remove('lock');
+            document.getElementById('chatLockBadge').classList.add('ready');
+            
+            // 온보딩 메시지 제거
+            const onboarding = document.getElementById('onboarding');
+            if (onboarding) {
+                onboarding.remove();
+            }
+            
+            // 시작 메시지 추가
+            addMessage(`✅ LLM이 시작되었습니다!\n📍 지역: ${location}\n🏪 업종: ${industryValue}\n🏪 가게: ${storeName}\n\n이제 질문을 입력해주세요!`, 'assistant');
+        }
 
         function handleKeyPress(event) {
-            if (event.key === 'Enter' && !isProcessing) {
+            if (event.key === 'Enter' && !isProcessing && llmReady) {
                 sendMessage();
             }
         }
 
         function showLoading() {
-            const loading = document.getElementById('loading');
-            if (loading) {
-                loading.style.display = 'flex';
-            }
+            document.getElementById('loading').classList.add('show');
         }
 
         function hideLoading() {
-            const loading = document.getElementById('loading');
-            if (loading) {
-                loading.style.display = 'none';
-            }
+            document.getElementById('loading').classList.remove('show');
         }
-
-        function sendSuggestion(message) {
-            document.getElementById('userInput').value = message;
-            sendMessage();
-        }
-
-        async function reloadDocuments() {
-            try {
-                const response = await fetch('/api/reload-documents', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    }
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    addMessage(`📚 ${data.message}`, 'assistant');
-                    showDocumentList(); // 문서 목록 자동 표시
-                } else {
-                    addMessage(`❌ 문서 새로고침 실패: ${data.error}`, 'assistant');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                addMessage('❌ 문서 새로고침 중 오류가 발생했습니다.', 'assistant');
-            }
-        }
-
-        async function showDocumentList() {
-            try {
-                const response = await fetch('/api/documents');
-                const data = await response.json();
-                
-                const documentList = document.getElementById('documentList');
-                documentList.innerHTML = '';
-                
-                if (data.documents.length === 0) {
-                    documentList.innerHTML = '<div class="document-item">로드된 문서가 없습니다.</div>';
-                } else {
-                    data.documents.forEach(doc => {
-                        const docItem = document.createElement('div');
-                        docItem.className = 'document-item';
-                        docItem.innerHTML = `
-                            <strong>${doc.filename}</strong><br>
-                            <small>타입: ${doc.file_type} | 크기: ${doc.content_length}자</small>
-                        `;
-                        documentList.appendChild(docItem);
-                    });
-                }
-                
-                documentList.style.display = documentList.style.display === 'none' ? 'block' : 'none';
-            } catch (error) {
-                console.error('Error:', error);
-                addMessage('❌ 문서 목록 조회 중 오류가 발생했습니다.', 'assistant');
-            }
-        }
-
 
         async function sendMessage() {
-            console.log('sendMessage called');
-            const input = document.getElementById('userInput');
-            const message = input.value.trim();
-            console.log('Message:', message, 'isProcessing:', isProcessing);
-            
-            if (!message || isProcessing) {
-                console.log('Message empty or processing, returning');
+            if (!llmReady) {
+                alert('먼저 LLM을 시작해주세요!');
                 return;
             }
             
-            // 웰컴 메시지 숨기기
-            const welcomeMessage = document.getElementById('welcomeMessage');
-            if (welcomeMessage) {
-                welcomeMessage.style.display = 'none';
+            const input = document.getElementById('userInput');
+            const message = input.value.trim();
+            
+            if (!message || isProcessing) {
+                return;
             }
             
             // UI 업데이트
@@ -1488,58 +671,45 @@
             input.value = '';
             
             try {
-                console.log('Sending request to /api/chat...');
-                
-                // 선택된 지역과 업종 정보 가져오기
-                const locationSelect = document.getElementById('locationSelect');
-                const industrySelect = document.getElementById('industrySelect');
-                const customIndustry = document.getElementById('customIndustry');
-                
-                const location = locationSelect.value;
-                let industry = industrySelect.value;
-                
-                if (industry === '직접입력') {
-                    industry = customIndustry.value;
-                }
-                
-                console.log('Location:', location, 'Industry:', industry);
-                
                 const response = await fetch('/api/chat', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        message: message,
                         session_id: sessionId,
-                        location: location,
-                        industry: industry
+                        message: message,
+                        location: contextMeta.region,
+                        industry: contextMeta.industry,
+                        store_name: contextMeta.store,
+                        system_prompt: contextMeta.systemPrompt,
+                        scope: {
+                            partition: `${contextMeta.region}:${contextMeta.industry}`,
+                            top_k: 3
+                        }
                     })
                 });
                 
-                console.log('Response received:', response.status);
                 const data = await response.json();
-                console.log('Response data:', data);
                 
                 if (response.ok) {
                     addMessage(data.message, 'assistant');
                 } else {
                     addMessage('오류: ' + (data.error || '응답을 받을 수 없습니다.'), 'assistant');
                 }
-            } catch (error) {
+            } catch(err) {
+                console.error(err);
                 addMessage('네트워크 오류가 발생했습니다. 다시 시도해주세요.', 'assistant');
-                console.error('Error:', error);
             } finally {
-                console.log('Request completed');
                 hideLoading();
                 isProcessing = false;
             }
         }
 
         function addMessage(text, sender) {
-            const chatContainer = document.getElementById('chatContainer');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${sender}`;
+            const chat = document.getElementById('chatContainer');
+            const row = document.createElement('div');
+            row.className = `message ${sender}`;
             
             const avatar = document.createElement('div');
             avatar.className = 'message-avatar';
@@ -1547,427 +717,127 @@
             
             const content = document.createElement('div');
             content.className = 'message-content';
-            
-            // HTML로 렌더링 (마크다운 지원)
             if (sender === 'assistant') {
-                // AI 응답은 HTML로 렌더링
                 content.innerHTML = text;
             } else {
-                // 사용자 메시지는 텍스트로 표시
-            content.textContent = text;
+                content.textContent = text;
             }
             
-            messageDiv.appendChild(avatar);
-            messageDiv.appendChild(content);
-            chatContainer.appendChild(messageDiv);
-            
-            // 스크롤을 최하단으로
-            chatContainer.scrollTop = chatContainer.scrollHeight;
+            row.appendChild(avatar);
+            row.appendChild(content);
+            chat.appendChild(row);
+            chat.scrollTop = chat.scrollHeight;
         }
 
         async function resetChat() {
-            if (!confirm('대화를 초기화하시겠습니까?')) return;
+            await fetch('/api/reset', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ session_id: sessionId })
+            });
             
+            const chat = document.getElementById('chatContainer');
+            chat.innerHTML = '';
+            
+            const onboarding = document.createElement('div');
+            onboarding.className = 'onboarding';
+            onboarding.id = 'onboarding';
+            onboarding.innerHTML = `<h3>먼저 좌측에서 <strong>지역·업종·가게 이름</strong>을 선택하고 <strong>LLM 시작</strong>을 눌러주세요.</h3>`;
+            chat.appendChild(onboarding);
+            
+            document.getElementById('userInput').disabled = true;
+            document.getElementById('sendBtn').disabled = true;
+            
+            const lock = document.getElementById('chatLockBadge');
+            lock.textContent = '잠금 (설정 필요)';
+            lock.classList.add('lock');
+            lock.classList.remove('ready');
+            
+            llmReady = false;
+            contextMeta = { region: null, industry: null, store: null, systemPrompt: "" };
+        }
+
+        // ====== 문서 관리 ======
+        async function reloadDocuments() {
             try {
-                await fetch('/api/reset', {
+                const res = await fetch('/api/reload-documents', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        session_id: sessionId
-                    })
+                        'Content-Type': 'application/json'
+                    }
                 });
-                
-                // 채팅 컨테이너 초기화
-                const chatContainer = document.getElementById('chatContainer');
-                chatContainer.innerHTML = `
-                    <div class="welcome-message" id="welcomeMessage">
-                        <h2>안녕하세요! 👋</h2>
-                        <p>성동구 지역 소상공인을 위한 마케팅 도우미입니다.</p>
-                        <p>마케팅 전략, SNS 홍보, 고객 유치 등 무엇이든 물어보세요!</p>
-                        
-                    </div>
-                `;
-            } catch (error) {
-                alert('초기화 중 오류가 발생했습니다.');
-                console.error('Error:', error);
+                const data = await res.json();
+                if (data.success) {
+                    addMessage(`📚 ${data.message}`, 'assistant');
+                    showDocumentList(true);
+                } else {
+                    addMessage(`❌ 문서 새로고침 실패: ${data.error}`, 'assistant');
+                }
+            } catch {
+                addMessage('❌ 문서 새로고침 중 오류가 발생했습니다.', 'assistant');
             }
         }
 
-
-        // 달력 관련 변수
-        let currentDate = new Date(2024, 9, 1); // 2024년 10월
-        let events = {};
-        let activeFilter = 'all';
-
-        // 한국 공휴일 데이터
-        const holidays = {
-            '2024-01-01': '신정',
-            '2024-02-09': '설날',
-            '2024-02-10': '설날',
-            '2024-02-11': '설날',
-            '2024-02-12': '대체휴일',
-            '2024-03-01': '삼일절',
-            '2024-04-10': '국회의원선거',
-            '2024-05-05': '어린이날',
-            '2024-05-06': '대체휴일',
-            '2024-05-15': '부처님오신날',
-            '2024-06-06': '현충일',
-            '2024-08-15': '광복절',
-            '2024-09-16': '추석',
-            '2024-09-17': '추석',
-            '2024-09-18': '추석',
-            '2024-10-03': '개천절',
-            '2024-10-09': '한글날',
-            '2024-12-25': '크리스마스'
-        };
-
-        // 페이지 로드 시 초기화
-        document.addEventListener('DOMContentLoaded', () => {
-            loadEvents();
-            renderCalendar();
-            setupEventFilters();
-            document.getElementById('userInput').focus();
-        });
-
-        // 이벤트 데이터 로드
-        async function loadEvents() {
+        async function showDocumentList(forceOpen = false) {
             try {
-                const response = await fetch('/api/calendar-events');
-                const data = await response.json();
-                events = data.events || {};
-                renderCalendar();
-            } catch (error) {
-                console.error('이벤트 데이터 로드 실패:', error);
+                const qs = llmReady ? `?region=${encodeURIComponent(contextMeta.region)}&industry=${encodeURIComponent(contextMeta.industry)}` : '';
+                const res = await fetch('/api/documents' + qs);
+                const data = await res.json();
+                const box = document.getElementById('documentList');
+                box.innerHTML = '';
+                const docs = Array.isArray(data.documents) ? data.documents : [];
+                if (!docs.length) {
+                    box.innerHTML = '<div class="document-item">로드된 문서가 없습니다.</div>';
+                } else {
+                    docs.forEach(d => {
+                        const div = document.createElement('div');
+                        div.className = 'document-item';
+                        div.innerHTML = `<strong>${d.filename}</strong><br><small>타입: ${d.file_type} | 크기: ${d.content_length}자 | 태그: ${d.tags?.join(', ') || '-'}</small>`;
+                        box.appendChild(div);
+                    });
+                }
+                box.style.display = (box.style.display === 'none' || forceOpen) ? 'block' : 'none';
+            } catch {
+                addMessage('❌ 문서 목록 조회 중 오류가 발생했습니다.', 'assistant');
             }
         }
 
-        // 달력 렌더링
-        function renderCalendar() {
-            const calendarGrid = document.getElementById('calendarGrid');
-            calendarGrid.innerHTML = '';
-
-            // 요일 헤더
-            const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
-            weekdays.forEach(day => {
-                const header = document.createElement('div');
-                header.className = 'calendar-header';
-                header.textContent = day;
-                calendarGrid.appendChild(header);
-            });
-
-            const year = currentDate.getFullYear();
-            const month = currentDate.getMonth();
-            const firstDay = new Date(year, month, 1);
-            const startDate = new Date(firstDay);
-            startDate.setDate(startDate.getDate() - firstDay.getDay());
-
-            // 6주 표시를 위해 42일 생성
-            for (let i = 0; i < 42; i++) {
-                const date = new Date(startDate);
-                date.setDate(startDate.getDate() + i);
-                
-                const dayElement = createDayElement(date, month);
-                calendarGrid.appendChild(dayElement);
-            }
-
-            // 현재 월 표시 업데이트
-            document.getElementById('currentMonth').textContent = 
-                `${year}년 ${month + 1}월`;
-        }
-
-        // 날짜 요소 생성
-        function createDayElement(date, currentMonth) {
-            const dayElement = document.createElement('div');
-            dayElement.className = 'calendar-day';
-            
-            const dayNumber = date.getDate();
-            const dateString = formatDate(date);
-            const isCurrentMonth = date.getMonth() === currentMonth;
-            const isToday = isSameDate(date, new Date());
-
-            if (!isCurrentMonth) {
-                dayElement.classList.add('other-month');
-            }
-            if (isToday) {
-                dayElement.classList.add('today');
-            }
-
-            // 날짜 번호
-            const dayNumberElement = document.createElement('div');
-            dayNumberElement.className = 'day-number';
-            dayNumberElement.textContent = dayNumber;
-            dayElement.appendChild(dayNumberElement);
-
-            // 공휴일 표시
-            if (holidays[dateString]) {
-                const holidayElement = document.createElement('div');
-                holidayElement.className = 'holiday';
-                holidayElement.textContent = holidays[dateString];
-                dayElement.appendChild(holidayElement);
-            }
-
-            // 이벤트 표시
-            const dayEvents = events[dateString] || [];
-            const filteredEvents = filterEvents(dayEvents);
-            
-            filteredEvents.forEach(event => {
-                const eventBar = document.createElement('div');
-                eventBar.className = `event-bar event-${event.type}`;
-                eventBar.textContent = event.name;
-                
-                eventBar.onclick = (e) => {
-                    e.stopPropagation();
-                    showEventDetails(event);
-                };
-                
-                dayElement.appendChild(eventBar);
-            });
-            
-            // 모든 이벤트를 표시 (더보기 버튼 제거)
-            // 이벤트가 많을 경우 스크롤로 처리
-
-            return dayElement;
-        }
-
-
-        // 이벤트 색상 가져오기
-        function getEventColor(type) {
-            const colors = {
-                'general': '#3498db',
-                'popup': '#e74c3c',
-                'university': '#9b59b6',
-                'movie': '#f39c12'
-            };
-            return colors[type] || '#3498db';
-        }
-
-        // 이벤트 필터링
-        function filterEvents(dayEvents) {
-            if (activeFilter === 'all') return dayEvents;
-            return dayEvents.filter(event => event.type === activeFilter);
-        }
-
-        // 월 변경
-        function changeMonth(direction) {
-            currentDate.setMonth(currentDate.getMonth() + direction);
-            renderCalendar();
-        }
-
-        // 이벤트 필터 설정
-        function setupEventFilters() {
-            const filterButtons = document.querySelectorAll('.filter-button');
-            filterButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    filterButtons.forEach(btn => btn.classList.remove('active'));
-                    this.classList.add('active');
-                    activeFilter = this.dataset.filter;
-                    renderCalendar();
-                });
-            });
-        }
-
-        // 이벤트 상세 보기
-        function showEventDetails(event) {
-            // 모달 오버레이 생성
-            const modalOverlay = document.createElement('div');
-            modalOverlay.className = 'event-modal-overlay';
-            modalOverlay.onclick = () => closeEventModal();
-            
-            // 모달 컨테이너 생성
-            const modalContainer = document.createElement('div');
-            modalContainer.className = 'event-modal-container';
-            modalContainer.onclick = (e) => e.stopPropagation();
-            
-            // 모달 헤더
-            const modalHeader = document.createElement('div');
-            modalHeader.className = 'event-modal-header';
-            modalHeader.innerHTML = `
-                <h2>📅 이벤트 상세 정보</h2>
-                <button class="modal-close-btn" onclick="closeEventModal()">✕</button>
-            `;
-            
-            // 모달 내용
-            const modalContent = document.createElement('div');
-            modalContent.className = 'event-modal-content';
-            modalContent.innerHTML = createEventModalContent(event);
-            
-            // 모달 푸터
-            const modalFooter = document.createElement('div');
-            modalFooter.className = 'event-modal-footer';
-            modalFooter.innerHTML = `
-                <button class="modal-confirm-btn" onclick="closeEventModal()">확인</button>
-            `;
-            
-            // 모달 조립
-            modalContainer.appendChild(modalHeader);
-            modalContainer.appendChild(modalContent);
-            modalContainer.appendChild(modalFooter);
-            modalOverlay.appendChild(modalContainer);
-            
-            // 모달 표시
-            document.body.appendChild(modalOverlay);
-            
-            // 애니메이션 효과
-            setTimeout(() => {
-                modalOverlay.classList.add('show');
-            }, 10);
-        }
+        // ====== 달력 (데모) ======
+        let currentDate = new Date(2024, 9, 1); // 2024년 10월
         
-        // 모달 닫기
-        function closeEventModal() {
-            const modal = document.querySelector('.event-modal-overlay');
-            if (modal) {
-                modal.classList.remove('show');
-                setTimeout(() => {
-                    modal.remove();
-                }, 300);
+        document.addEventListener('DOMContentLoaded', () => {
+            renderCalendar();
+            document.getElementById('userInput').disabled = true;
+            document.getElementById('sendBtn').disabled = true;
+        });
+        
+        function renderCalendar() {
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+            const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+            weekdays.forEach(d => {
+                const hd = document.createElement('div');
+                hd.className = 'calendar-header';
+                hd.textContent = d;
+                grid.appendChild(hd);
+            });
+            const y = currentDate.getFullYear();
+            const m = currentDate.getMonth();
+            const first = new Date(y, m, 1);
+            const start = new Date(first);
+            start.setDate(start.getDate() - first.getDay());
+            for (let i = 0; i < 42; i++) {
+                const date = new Date(start);
+                date.setDate(start.getDate() + i);
+                const cell = document.createElement('div');
+                cell.className = 'calendar-day';
+                cell.innerHTML = `<div class="day-number">${date.getDate()}</div>`;
+                grid.appendChild(cell);
             }
-        }
-
-        // 모달용 이벤트 콘텐츠 생성
-        function createEventModalContent(event) {
-            return `
-                <div class="event-detail-card">
-                    <div class="event-title">
-                        <h3>${event.name}</h3>
-                        <span class="event-type-badge event-${event.type}">${getEventTypeName(event.type)}</span>
-                    </div>
-                    
-                    <div class="event-info-grid">
-                        <div class="info-item">
-                            <div class="info-label">📅 기간</div>
-                            <div class="info-value">${event.startDate} ~ ${event.endDate}</div>
-                        </div>
-                        
-                        <div class="info-item">
-                            <div class="info-label">📍 위치</div>
-                            <div class="info-value">${event.location}</div>
-                        </div>
-                        
-                        <div class="info-item">
-                            <div class="info-label">👥 타겟</div>
-                            <div class="info-value">${event.target}</div>
-                        </div>
-                        
-                        <div class="info-item full-width">
-                            <div class="info-label">📝 설명</div>
-                            <div class="info-value">${event.description}</div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        // 이벤트 정보 생성 (기존 함수 유지)
-        function createEventInfo(event) {
-            return `
-이벤트명: ${event.name}
-타입: ${getEventTypeName(event.type)}
-기간: ${event.startDate} ~ ${event.endDate}
-위치: ${event.location}
-타겟: ${event.target}
-설명: ${event.description}
-            `;
-        }
-
-        // 이벤트 타입명 변환
-        function getEventTypeName(type) {
-            const typeNames = {
-                'general': '일반 이벤트',
-                'popup': '팝업',
-                'university': '대학 이벤트',
-                'movie': '영화'
-            };
-            return typeNames[type] || type;
-        }
-
-        // 유틸리티 함수들
-        function formatDate(date) {
-            return date.getFullYear() + '-' + 
-                   String(date.getMonth() + 1).padStart(2, '0') + '-' + 
-                   String(date.getDate()).padStart(2, '0');
-        }
-
-        function isSameDate(date1, date2) {
-            return date1.getFullYear() === date2.getFullYear() &&
-                   date1.getMonth() === date2.getMonth() &&
-                   date1.getDate() === date2.getDate();
-        }
-
-        // 사이드바 관련 JavaScript 함수들
-        function updateSelectedInfo() {
-            const locationSelect = document.getElementById('locationSelect');
-            const industrySelect = document.getElementById('industrySelect');
-            const customIndustry = document.getElementById('customIndustry');
-            const selectedInfo = document.getElementById('selectedInfo');
-            const selectedLocation = document.getElementById('selectedLocation');
-            const selectedIndustry = document.getElementById('selectedIndustry');
-
-            // 직접 입력 필드 표시/숨김
-            if (industrySelect.value === '직접입력') {
-                customIndustry.style.display = 'block';
-            } else {
-                customIndustry.style.display = 'none';
-            }
-
-            // 선택된 정보 업데이트
-            const location = locationSelect.value;
-            let industry = industrySelect.value;
-            
-            if (industry === '직접입력') {
-                industry = customIndustry.value;
-            }
-
-            if (location || industry) {
-                selectedInfo.style.display = 'block';
-                selectedLocation.textContent = location ? `📍 지역: ${location}` : '';
-                selectedIndustry.textContent = industry ? `🏪 업종: ${industry}` : '';
-            } else {
-                selectedInfo.style.display = 'none';
-            }
-        }
-
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const toggleIcon = document.getElementById('toggle-icon');
-            const mainContent = document.querySelector('.main-content');
-            const toggleButton = document.querySelector('.sidebar-toggle');
-
-            sidebar.classList.toggle('collapsed');
-            toggleButton.classList.toggle('collapsed');
-            mainContent.classList.toggle('sidebar-open');
-
-            // 아이콘 변경
-            if (sidebar.classList.contains('collapsed')) {
-                toggleIcon.textContent = '☰';
-            } else {
-                toggleIcon.textContent = '✕';
-            }
-        }
-
-        function applySettings() {
-            const locationSelect = document.getElementById('locationSelect');
-            const industrySelect = document.getElementById('industrySelect');
-            const customIndustry = document.getElementById('customIndustry');
-            
-            const location = locationSelect.value;
-            let industry = industrySelect.value;
-            
-            if (industry === '직접입력') {
-                industry = customIndustry.value;
-            }
-            
-            if (location || industry) {
-                alert(`✅ 설정이 적용되었습니다!\n📍 지역: ${location || '미선택'}\n🏢 업종: ${industry || '미선택'}\n\n이제 질문을 입력하면 선택된 정보가 반영됩니다.`);
-            } else {
-                alert('⚠️ 지역 또는 업종을 선택해주세요.');
-            }
+            document.getElementById('currentMonth').textContent = `${y}년 ${m + 1}월`;
         }
     </script>
-        </div>
-    </div>
 </body>
 </html>
-
