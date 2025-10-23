@@ -293,17 +293,10 @@ def search_relevant_documents(query, max_docs=3):
     relevant_docs.sort(key=lambda x: x['relevance_score'], reverse=True)
     return relevant_docs[:max_docs]
 
-# 앱 시작 시 RAG 문서 로드 및 인덱스 구축 (Render 환경에서 지연 로딩)
-try:
-    rag_documents = load_rag_documents()
-    document_index = build_document_index()
-    print(f"📚 문서 로드 완료: {len(rag_documents)}개")
-    print(f"🔍 인덱스 구축 완료: {len(document_index['keywords'])}개 키워드")
-except Exception as e:
-    print(f"⚠️ 문서 로딩 중 오류 발생: {e}")
-    print("🔄 지연 로딩으로 전환합니다.")
-    rag_documents = {}
-    document_index = {'keywords': {}, 'categories': {}, 'entities': {}}
+# Render 환경에서 앱 시작 시 문서 로딩 비활성화 (메모리 절약)
+print("🚀 Render 환경에서 실행 중 - 문서 로딩은 요청 시 처리됩니다.")
+rag_documents = {}
+document_index = {'keywords': {}, 'categories': {}, 'entities': {}}
 
 @app.route('/api/reload-documents', methods=['POST'])
 def reload_documents():
@@ -512,7 +505,20 @@ def chat():
         menu_type = data.get('menu_type', None)
         system_context = get_system_prompt(menu_type)
         
-        # RAG: 관련 문서 검색 (지연 로딩)
+        # RAG: 관련 문서 검색 (요청 시 로딩)
+        # 문서가 로드되지 않았다면 먼저 로드
+        global rag_documents, document_index
+        if not rag_documents:
+            try:
+                print("📚 문서 로딩 시작...")
+                rag_documents = load_rag_documents()
+                document_index = build_document_index()
+                print(f"📚 문서 로드 완료: {len(rag_documents)}개")
+            except Exception as e:
+                print(f"⚠️ 문서 로딩 실패: {e}")
+                rag_documents = {}
+                document_index = {'keywords': {}, 'categories': {}, 'entities': {}}
+        
         relevant_docs = search_relevant_documents(user_message)
         
         # RAG 컨텍스트 추가
@@ -754,20 +760,7 @@ def get_calendar_events():
 @app.route('/health', methods=['GET'])
 def health_check():
     """헬스체크 엔드포인트"""
-    try:
-        return jsonify({
-            'status': 'healthy',
-            'timestamp': datetime.now().isoformat(),
-            'service': 'seongdong-marketing-helper',
-            'documents_loaded': len(rag_documents) if rag_documents else 0
-        })
-    except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'timestamp': datetime.now().isoformat(),
-            'service': 'seongdong-marketing-helper',
-            'error': str(e)
-        }), 500
+    return jsonify({'status': 'ok'}), 200
 
 if __name__ == '__main__':
     import os
