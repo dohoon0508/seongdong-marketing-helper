@@ -50,13 +50,30 @@ def chat():
                 'status': 'error'
             }), 500
         
-        # 간단한 프롬프트
+        # 지역과 업종 정보 가져오기
+        location = data.get('location', '')
+        industry = data.get('industry', '')
+        
+        # 지역과 업종 정보를 포함한 프롬프트 생성
+        context_info = ""
+        if location or industry:
+            context_info = f"""
+📍 선택된 지역: {location if location else '미선택'}
+🏪 선택된 업종: {industry if industry else '미선택'}
+
+위의 지역과 업종 정보를 고려하여 답변해주세요.
+"""
+        
+        # 향상된 프롬프트
         prompt = f"""
         안녕하세요! 성동구 소상공인 여러분을 위한 마케팅 도우미입니다.
+        
+        {context_info}
         
         질문: {user_message}
         
         성동구 지역의 소상공인에게 도움이 되는 실용적인 마케팅 조언을 제공해주세요.
+        특히 선택된 지역과 업종에 맞는 구체적이고 실용적인 조언을 해주세요.
         """
         
         response = model.generate_content(prompt)

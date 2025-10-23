@@ -16,9 +16,8 @@
             background: #ffffff;
             min-height: 100vh;
             display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
+            padding: 0;
+            margin: 0;
             position: relative;
             overflow-x: hidden;
         }
@@ -36,18 +35,103 @@
             z-index: -1;
         }
 
+        /* 사이드바 스타일 */
+        .sidebar {
+            width: 280px;
+            background: #f8f9fa;
+            border-right: 1px solid #e9ecef;
+            padding: 20px;
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar h3 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #555;
+            font-size: 14px;
+        }
+
+        .form-group select,
+        .form-group input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            background: #fff;
+            transition: border-color 0.2s;
+        }
+
+        .form-group select:focus,
+        .form-group input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+        }
+
+        .custom-input {
+            margin-top: 10px;
+        }
+
+        .selected-info {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 15px;
+        }
+
+        .selected-info h4 {
+            color: #1976d2;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .selected-info p {
+            color: #333;
+            font-size: 13px;
+            margin: 2px 0;
+        }
+
+        /* 메인 컨텐츠 영역 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
         .container {
             width: 100%;
-            max-width: 1200px;
+            max-width: 100%;
             background: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            border: 1px solid #e9ecef;
             display: flex;
             flex-direction: column;
             min-height: 100vh;
             padding: 0;
+            margin: 0;
+            border-radius: 0;
+            box-shadow: none;
+            border: none;
         }
 
         .header {
@@ -1086,7 +1170,71 @@
     </style>
 </head>
 <body>
-    <div class="container">
+    <!-- 사이드바 -->
+    <div class="sidebar">
+        <h3>🎯 지역 & 업종 설정</h3>
+        
+        <!-- 지역 선택 -->
+        <div class="form-group">
+            <label for="locationSelect">📍 지역 선택</label>
+            <select id="locationSelect" onchange="updateSelectedInfo()">
+                <option value="">지역을 선택하세요</option>
+                <option value="성수">성수</option>
+                <option value="왕십리">왕십리</option>
+                <option value="뚝섬">뚝섬</option>
+                <option value="한양대">한양대</option>
+                <option value="마장동">마장동</option>
+                <option value="금남시장">금남시장</option>
+                <option value="답십리">답십리</option>
+                <option value="옥수">옥수</option>
+                <option value="신금호">신금호</option>
+                <option value="행당">행당</option>
+                <option value="장한평">장한평</option>
+                <option value="풍산지구">풍산지구</option>
+                <option value="화양시장">화양시장</option>
+                <option value="기타">기타</option>
+            </select>
+        </div>
+
+        <!-- 업종 선택 -->
+        <div class="form-group">
+            <label for="industrySelect">🏪 업종 선택</label>
+            <select id="industrySelect" onchange="updateSelectedInfo()">
+                <option value="">업종을 선택하세요</option>
+                <option value="카페">카페</option>
+                <option value="커피전문점">커피전문점</option>
+                <option value="한식">한식</option>
+                <option value="양식">양식</option>
+                <option value="일식">일식</option>
+                <option value="중식">중식</option>
+                <option value="치킨">치킨</option>
+                <option value="분식">분식</option>
+                <option value="베이커리">베이커리</option>
+                <option value="주점">주점</option>
+                <option value="육류/고기">육류/고기</option>
+                <option value="백반/가정식">백반/가정식</option>
+                <option value="단품요리">단품요리</option>
+                <option value="축산물">축산물</option>
+                <option value="식료품">식료품</option>
+                <option value="해물">해물</option>
+                <option value="직접입력">직접 입력하기</option>
+            </select>
+            
+            <!-- 직접 입력 필드 -->
+            <input type="text" id="customIndustry" class="custom-input" placeholder="업종을 직접 입력하세요" style="display: none;" onchange="updateSelectedInfo()">
+        </div>
+
+        <!-- 선택된 정보 표시 -->
+        <div class="selected-info" id="selectedInfo" style="display: none;">
+            <h4>📋 선택된 정보</h4>
+            <p id="selectedLocation"></p>
+            <p id="selectedIndustry"></p>
+        </div>
+    </div>
+
+    <!-- 메인 컨텐츠 -->
+    <div class="main-content">
+        <div class="container">
         <div class="header">
             <h1>🚀 성동구 소상공인 마케팅 도우미</h1>
             <p>Powered by Google Gemini Flash 2.5</p>
@@ -1282,6 +1430,24 @@
             
             if (!message || isProcessing) return;
             
+            // 선택된 지역과 업종 정보 가져오기
+            const locationSelect = document.getElementById('locationSelect');
+            const industrySelect = document.getElementById('industrySelect');
+            const customIndustry = document.getElementById('customIndustry');
+            
+            const location = locationSelect.value;
+            let industry = industrySelect.value;
+            
+            if (industry === '직접입력') {
+                industry = customIndustry.value;
+            }
+            
+            // 지역과 업종 정보를 메시지에 추가
+            let enhancedMessage = message;
+            if (location || industry) {
+                enhancedMessage = `[지역: ${location || '미선택'}, 업종: ${industry || '미선택'}] ${message}`;
+            }
+            
             isProcessing = true;
             showLoading();
             
@@ -1292,8 +1458,10 @@
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        message: message,
-                        menu_type: menuType
+                        message: enhancedMessage,
+                        menu_type: menuType,
+                        location: location,
+                        industry: industry
                     })
                 });
                 
@@ -1748,7 +1916,42 @@
                    date1.getMonth() === date2.getMonth() &&
                    date1.getDate() === date2.getDate();
         }
+
+        // 사이드바 관련 JavaScript 함수들
+        function updateSelectedInfo() {
+            const locationSelect = document.getElementById('locationSelect');
+            const industrySelect = document.getElementById('industrySelect');
+            const customIndustry = document.getElementById('customIndustry');
+            const selectedInfo = document.getElementById('selectedInfo');
+            const selectedLocation = document.getElementById('selectedLocation');
+            const selectedIndustry = document.getElementById('selectedIndustry');
+
+            // 직접 입력 필드 표시/숨김
+            if (industrySelect.value === '직접입력') {
+                customIndustry.style.display = 'block';
+            } else {
+                customIndustry.style.display = 'none';
+            }
+
+            // 선택된 정보 업데이트
+            const location = locationSelect.value;
+            let industry = industrySelect.value;
+            
+            if (industry === '직접입력') {
+                industry = customIndustry.value;
+            }
+
+            if (location || industry) {
+                selectedInfo.style.display = 'block';
+                selectedLocation.textContent = location ? `📍 지역: ${location}` : '';
+                selectedIndustry.textContent = industry ? `🏪 업종: ${industry}` : '';
+            } else {
+                selectedInfo.style.display = 'none';
+            }
+        }
     </script>
+        </div>
+    </div>
 </body>
 </html>
 
