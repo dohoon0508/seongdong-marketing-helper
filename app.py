@@ -21,12 +21,12 @@ GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 if not GOOGLE_API_KEY:
     print("⚠️ 경고: GOOGLE_API_KEY가 설정되지 않았습니다.")
     print("Render Dashboard → Environment에서 GOOGLE_API_KEY를 설정해주세요.")
+    model = None  # API Key가 없으면 모델을 None으로 설정
 else:
     print("✅ Google API Key가 설정되었습니다.")
     genai.configure(api_key=GOOGLE_API_KEY)
-
-# Gemini Flash 2.5 모델 설정 (무료 버전)
-model = genai.GenerativeModel('gemini-2.5-flash')
+    # Gemini Flash 2.5 모델 설정 (무료 버전)
+    model = genai.GenerativeModel('gemini-2.5-flash')
 
 # 대화 히스토리 저장
 chat_sessions = {}
@@ -458,14 +458,16 @@ def chat():
         
         # Gemini API 호출 (RAG 컨텍스트 포함) - 타임아웃 설정
         try:
-            # API Key 확인
-            if not GOOGLE_API_KEY:
+            # API Key 및 모델 확인
+            if not GOOGLE_API_KEY or model is None:
+                print("❌ API Key 또는 모델이 설정되지 않음")
                 return jsonify({
                     'message': '❌ Google API Key가 설정되지 않았습니다. 관리자에게 문의하세요.',
                     'session_id': session_id
                 }), 500
             
-            direct_model = genai.GenerativeModel('gemini-2.5-flash')
+            # 모델이 이미 설정되어 있으므로 직접 사용
+            direct_model = model
             
             # RAG 컨텍스트를 포함한 완전한 프롬프트 (길이 제한)
             full_prompt = f"{system_context}{rag_context}\n\n사용자 질문: {user_message}"
