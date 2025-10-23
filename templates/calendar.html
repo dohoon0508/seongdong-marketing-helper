@@ -387,7 +387,33 @@
             try {
                 const response = await fetch('/api/calendar-events');
                 const data = await response.json();
-                events = data.events || {};
+                
+                // 새로운 데이터 형식에 맞게 변환
+                events = {};
+                data.forEach(event => {
+                    const startDate = new Date(event.start);
+                    const endDate = new Date(event.end);
+                    
+                    // 시작일부터 종료일까지 모든 날짜에 이벤트 추가
+                    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+                        const dateString = formatDate(d);
+                        if (!events[dateString]) {
+                            events[dateString] = [];
+                        }
+                        events[dateString].push({
+                            name: event.title,
+                            type: event.type,
+                            startDate: event.start,
+                            endDate: event.end,
+                            location: event.location,
+                            target: event.audience,
+                            description: event.description,
+                            district: event.district,
+                            source: event.source
+                        });
+                    }
+                });
+                
                 renderCalendar();
             } catch (error) {
                 console.error('이벤트 데이터 로드 실패:', error);
@@ -542,11 +568,13 @@
         function createEventInfo(event) {
             return `
                 <div class="event-info">
-                    <strong>이벤트명:</strong> ${event.name}<br>
+                    <strong>이벤트명:</strong> ${event.title}<br>
                     <strong>타입:</strong> ${getEventTypeName(event.type)}<br>
-                    <strong>기간:</strong> ${event.startDate} ~ ${event.endDate}<br>
+                    <strong>기간:</strong> ${event.start} ~ ${event.end}<br>
                     <strong>위치:</strong> ${event.location}<br>
-                    <strong>타겟:</strong> ${event.target}<br>
+                    <strong>타겟:</strong> ${event.audience}<br>
+                    <strong>지역:</strong> ${event.district}<br>
+                    <strong>출처:</strong> ${event.source}<br>
                     <strong>설명:</strong> ${event.description}
                 </div>
             `;
@@ -555,10 +583,12 @@
         // 이벤트 타입명 변환
         function getEventTypeName(type) {
             const typeNames = {
-                'general': '일반 이벤트',
-                'popup': '팝업',
-                'university': '대학 이벤트',
-                'movie': '영화'
+                '명절대목': '명절대목',
+                '시즌이벤트': '시즌이벤트',
+                '지역축제': '지역축제',
+                '팝업': '팝업',
+                '전시/팝업': '전시/팝업',
+                '팝업/쇼룸': '팝업/쇼룸'
             };
             return typeNames[type] || type;
         }

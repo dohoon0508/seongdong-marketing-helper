@@ -410,7 +410,7 @@
                 <option value="기타">기타</option>
             </select>
         </div>
-
+        
         <!-- 업종 선택 -->
         <div class="form-group">
             <label for="industrySelect">🏪 업종 선택</label>
@@ -437,13 +437,13 @@
             
             <!-- 직접 입력 필드 -->
             <input type="text" id="customIndustry" class="custom-input" placeholder="업종을 직접 입력하세요" style="display: none;" onchange="updateSelectedInfo()">
-        </div>
+                    </div>
 
         <!-- 가게 이름 입력 -->
         <div class="form-group">
             <label for="storeNameInput">🏪 가게 이름</label>
             <input type="text" id="storeNameInput" placeholder="가게 이름을 입력하세요" onchange="updateSelectedInfo()">
-        </div>
+                        </div>
 
         <!-- 선택된 정보 표시 -->
         <div class="selected-info" id="selectedInfo" style="display: none;">
@@ -451,14 +451,14 @@
             <p id="selectedLocation"></p>
             <p id="selectedIndustry"></p>
             <p id="selectedStore"></p>
-        </div>
+                        </div>
         
         <!-- LLM 시작 버튼 -->
         <div style="margin-top: 15px;">
             <button id="startButton" class="start-button" onclick="startLLM()" disabled>
                 🚀 LLM 시작
             </button>
-        </div>
+            </div>
 
         <!-- 문서 관리 -->
         <div style="margin-top: 20px;">
@@ -470,14 +470,14 @@
             </button>
             <div id="documentList" class="document-list" style="display: none;"></div>
         </div>
-
+        
         <!-- 달력 (데모) -->
         <div class="calendar-section">
             <h4>📅 이벤트 달력</h4>
             <div id="currentMonth"></div>
             <div id="calendarGrid" class="calendar-grid"></div>
-        </div>
-    </div>
+                </div>
+            </div>
 
     <!-- 메인 컨텐츠 -->
     <div class="main-content" id="mainContent">
@@ -485,23 +485,23 @@
         <div class="header">
             <h1>🤖 성동구 마케팅 도우미</h1>
             <span id="chatLockBadge" class="chat-lock-badge lock">잠금 (설정 필요)</span>
-        </div>
-
+                </div>
+                
         <!-- 채팅 컨테이너 -->
         <div class="chat-container">
             <div class="chat-messages" id="chatContainer">
                 <div class="onboarding" id="onboarding">
                     <h3>먼저 좌측에서 <strong>지역·업종·가게 이름</strong>을 선택하고 <strong>LLM 시작</strong>을 눌러주세요.</h3>
-                </div>
             </div>
-            
-            <div class="loading" id="loading">
+        </div>
+        
+        <div class="loading" id="loading">
                 <div>🤖 AI가 답변을 생성하고 있습니다...</div>
-            </div>
-            
+        </div>
+        
             <div class="chat-input">
                 <input type="text" id="userInput" placeholder="질문을 입력하세요..." onkeypress="handleKeyPress(event)">
-                <button id="sendBtn" onclick="sendMessage()">전송</button>
+            <button id="sendBtn" onclick="sendMessage()">전송</button>
             </div>
         </div>
     </div>
@@ -561,7 +561,7 @@
                 selectedLocation.textContent = `📍 지역: ${location || '미선택'}`;
                 selectedIndustry.textContent = `🏪 업종: ${industry || '미선택'}`;
                 selectedStore.textContent = `🏪 가게: ${storeName || '미선택'}`;
-            } else {
+                } else {
                 selectedInfo.style.display = 'none';
             }
             
@@ -720,7 +720,7 @@
             if (sender === 'assistant') {
                 content.innerHTML = text;
             } else {
-                content.textContent = text;
+            content.textContent = text;
             }
             
             row.appendChild(avatar);
@@ -730,9 +730,9 @@
         }
 
         async function resetChat() {
-            await fetch('/api/reset', {
-                method: 'POST',
-                headers: {
+                await fetch('/api/reset', {
+                    method: 'POST',
+                    headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ session_id: sessionId })
@@ -808,7 +808,7 @@
         let currentDate = new Date(2024, 9, 1); // 2024년 10월
         
         document.addEventListener('DOMContentLoaded', () => {
-            renderCalendar();
+                    renderCalendar();
             document.getElementById('userInput').disabled = true;
             document.getElementById('sendBtn').disabled = true;
         });

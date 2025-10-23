@@ -217,51 +217,6 @@
         }
 
         /* 심사 질문 메뉴 스타일 */
-        .evaluation-menu {
-            padding: 15px 20px;
-            background: linear-gradient(135deg, #e3f2fd 0%, #f5f5f5 100%);
-            border-top: 1px solid #ddd;
-            border-bottom: 1px solid #ddd;
-        }
-
-        .evaluation-menu h4 {
-            margin: 0 0 10px 0;
-            color: #333;
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        .evaluation-buttons {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .evaluation-btn {
-            padding: 8px 12px;
-            background: linear-gradient(135deg, #4a90e2 0%, #5b7edc 100%);
-            color: white;
-            border: none;
-            border-radius: 15px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            white-space: nowrap;
-        }
-
-        .evaluation-btn:hover {
-            background: linear-gradient(135deg, #3a7bc8 0%, #4a6bd1 100%);
-            transform: translateY(-1px);
-            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
-        }
-
-        .evaluation-btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
 
         .loading {
             display: none;
@@ -464,6 +419,34 @@
             color: #666;
             border-color: #ccc;
             font-style: italic;
+        }
+        
+        /* 심사용 특별 스타일링 */
+        .message-content p {
+            margin: 8px 0;
+            line-height: 1.6;
+        }
+        
+        .message-content .evaluation-section {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f5f5f5 100%);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            border-left: 4px solid #2196f3;
+        }
+        
+        .message-content .evaluation-number {
+            display: inline-block;
+            background: #2196f3;
+            color: white;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 25px;
+            margin-right: 10px;
+            font-weight: bold;
+            font-size: 14px;
         }
 
         .event-item.event-collapse {
@@ -865,21 +848,6 @@
             <div>🤖 AI가 답변을 생성하고 있습니다...</div>
         </div>
 
-        <!-- 심사 질문 메뉴 -->
-        <div class="evaluation-menu">
-            <h4>🏆 심사 평가 질문</h4>
-            <div class="evaluation-buttons">
-                <button class="evaluation-btn" onclick="generateEvaluation('Q1')" disabled id="evalQ1">
-                    Q1. 고객특성별 채널 추천
-                </button>
-                <button class="evaluation-btn" onclick="generateEvaluation('Q2')" disabled id="evalQ2">
-                    Q2. 재방문률 개선 아이디어
-                </button>
-                <button class="evaluation-btn" onclick="generateEvaluation('Q3')" disabled id="evalQ3">
-                    Q3. 요식업 문제점 & 해결방안
-                </button>
-            </div>
-        </div>
         
         <div class="chat-input">
             <input type="text" id="userInput" placeholder="마케팅 관련 질문을 입력하세요..." onkeypress="handleKeyPress(event)">
@@ -887,6 +855,9 @@
         </div>
     </div>
 
+    <!-- 마크다운 렌더링을 위한 라이브러리 -->
+    <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
+    
     <script>
         const sessionId = 'session_' + Date.now();
         let isProcessing = false;
@@ -906,9 +877,9 @@
             document.getElementById('loading').classList.remove('show');
         }
 
-        async function sendMessage() {
+        async function sendMessage(messageText = null) {
             const input = document.getElementById('userInput');
-            const message = input.value.trim();
+            const message = messageText || input.value.trim();
             
             if (!message || isProcessing) {
                 return;
@@ -926,9 +897,17 @@
             
             // 사용자 메시지 표시
             addMessage(message, 'user');
-            input.value = '';
+            
+            // 입력 필드에서 가져온 메시지인 경우에만 입력 필드 비우기
+            if (!messageText) {
+                input.value = '';
+            }
             
             try {
+                // 5분 타임아웃 설정
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 300000); // 5분
+                
                 const response = await fetch('/api/chat', {
                     method: 'POST',
                     headers: {
@@ -937,8 +916,11 @@
                     body: JSON.stringify({
                         session_id: sessionId,
                         message: message
-                    })
+                    }),
+                    signal: controller.signal
                 });
+                
+                clearTimeout(timeoutId);
                 
                 const data = await response.json();
                 
@@ -956,6 +938,16 @@
             }
         }
 
+        function renderMarkdown(text) {
+            // marked 라이브러리를 사용하여 마크다운 렌더링
+            if (typeof marked !== 'undefined') {
+                return marked.parse(text);
+            } else {
+                // marked가 없으면 기본 HTML 처리
+                return text.replace(/\n/g, '<br>');
+            }
+        }
+
         function addMessage(text, sender) {
             const chat = document.getElementById('chatContainer');
             const row = document.createElement('div');
@@ -968,7 +960,8 @@
             const content = document.createElement('div');
             content.className = 'message-content';
             if (sender === 'assistant') {
-                content.innerHTML = text;
+                // 마크다운 렌더링 적용
+                content.innerHTML = renderMarkdown(text);
             } else {
                 content.textContent = text;
             }
@@ -1017,63 +1010,45 @@
             try {
                 const response = await fetch('/api/calendar-events');
                 const data = await response.json();
-                const rawEvents = data.events || [];
                 
-                // 이벤트를 날짜별로 그룹화
+                console.log('이벤트 로드됨:', Object.keys(events).length, '개 날짜에 이벤트 있음');
+                console.log('이벤트 데이터 샘플:', data.slice(0, 3));
+                
+                // 새로운 데이터 형식에 맞게 변환
                 events = {};
-                rawEvents.forEach(event => {
-                    // 날짜 형식 변환: 2023.1.20 -> 2023-01-20
-                    const formatDateString = (dateStr) => {
-                        if (!dateStr || dateStr === '' || dateStr === 'undefined') {
-                            console.warn('빈 날짜 데이터 발견:', event);
-                            return null;
-                        }
-                        const parts = dateStr.split('.');
-                        if (parts.length !== 3) {
-                            console.warn('잘못된 날짜 형식:', dateStr);
-                            return null;
-                        }
-                        const year = parts[0];
-                        const month = parts[1].padStart(2, '0');
-                        const day = parts[2].padStart(2, '0');
-                        return `${year}-${month}-${day}`;
-                    };
+                data.forEach(event => {
+                    if (!event.start) return; // 시작일이 없으면 스킵
                     
-                    const startDateStr = formatDateString(event.Start_Date);
-                    const endDateStr = formatDateString(event.End_Date);
-                    
-                    if (!startDateStr || !endDateStr) {
-                        console.warn('날짜 변환 실패, 이벤트 건너뜀:', event);
-                        return; // 이 이벤트는 건너뜀
-                    }
-                    
-                    const startDate = new Date(startDateStr);
-                    const endDate = new Date(endDateStr);
+                    const startDate = new Date(event.start);
+                    const endDate = event.end ? new Date(event.end) : new Date(startDate);
                     
                     // 시작일부터 종료일까지 모든 날짜에 이벤트 추가
-                    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-                        const dateStr = formatDate(d);
-                        if (!events[dateStr]) {
-                            events[dateStr] = [];
+                    for (let d = new Date(startDate); d < endDate; d.setDate(d.getDate() + 1)) {
+                        const dateString = formatDate(d);
+                        if (!events[dateString]) {
+                            events[dateString] = [];
                         }
                         
                         // 이벤트 타입에 따른 색상 매핑
                         let eventType = 'popup';
-                        if (event.Event_Type === '팝업') eventType = 'popup';
-                        else if (event.Event_Type === '전시') eventType = 'exhibition';
-                        else if (event.Event_Type === '축제') eventType = 'festival';
-                        else if (event.Event_Type === '휴일') eventType = 'holiday';
-                        else if (event.Event_Type === '영화') eventType = 'movie';
+                        if (event.type === '팝업') eventType = 'popup';
+                        else if (event.type === '전시/팝업') eventType = 'exhibition';
+                        else if (event.type === '지역축제') eventType = 'festival';
+                        else if (event.type === '명절대목') eventType = 'holiday';
+                        else if (event.type === '시즌이벤트') eventType = 'season';
+                        else if (event.type === '영화') eventType = 'movie';
                         
-                        events[dateStr].push({
-                            name: event.Event_Name,
+                        events[dateString].push({
+                            name: event.title,
                             type: eventType,
-                            start_date: event.Start_Date,
-                            end_date: event.End_Date,
-                            location: event.Location_Address,
-                            target: event.Target_Audience,
-                            description: event.Event_Description,
-                            event_type: event.Event_Type
+                            start_date: event.start,
+                            end_date: event.end,
+                            location: event.location,
+                            target: event.audience,
+                            description: event.description,
+                            event_type: event.type,
+                            district: event.district,
+                            source: event.source
                         });
                     }
                 });
@@ -1300,61 +1275,7 @@
             }
         });
 
-        // 심사 질문 버튼 활성화
-        function enableEvaluationButtons() {
-            if (setupInfo && setupInfo.location && setupInfo.industry && setupInfo.store_name) {
-                document.getElementById('evalQ1').disabled = false;
-                document.getElementById('evalQ2').disabled = false;
-                document.getElementById('evalQ3').disabled = false;
-            }
-        }
 
-        // 심사 질문 생성
-        async function generateEvaluation(questionType) {
-            if (isProcessing) {
-                return;
-            }
-
-            if (!setupInfo || !setupInfo.location || !setupInfo.industry || !setupInfo.store_name) {
-                alert('지역, 업종, 가게명이 모두 설정되어야 심사 질문을 생성할 수 있습니다.');
-                return;
-            }
-
-            isProcessing = true;
-            showLoading();
-
-            try {
-                const response = await fetch('/api/evaluation', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        session_id: sessionId,
-                        question_type: questionType
-                    })
-                });
-
-                const data = await response.json();
-                
-                if (data.message) {
-                    // 기존 채팅 메시지 초기화
-                    const chatContainer = document.getElementById('chatContainer');
-                    chatContainer.innerHTML = '';
-                    
-                    // 심사 질문 결과를 채팅에 추가
-                    addMessage(data.message, 'assistant');
-                } else {
-                    addMessage('❌ 심사 질문 생성에 실패했습니다.', 'assistant');
-                }
-            } catch (error) {
-                console.error('심사 질문 생성 실패:', error);
-                addMessage('❌ 네트워크 오류가 발생했습니다. 다시 시도해주세요.', 'assistant');
-            } finally {
-                isProcessing = false;
-                hideLoading();
-            }
-        }
 
         // 페이지 로드 시 설정 정보 확인 및 달력 렌더링
         document.addEventListener('DOMContentLoaded', async function() {
@@ -1362,13 +1283,11 @@
                 const response = await fetch('/api/get-setup');
                 const data = await response.json();
                 
-                if (data.success && data.setup_info) {
-                    setupInfo = data.setup_info;
+                if (data && data.location) {
+                    setupInfo = data;
                     document.getElementById('currentSetup').innerHTML = `
                         📍 ${setupInfo.location} | 🏪 ${setupInfo.industry} | 🏪 ${setupInfo.store_name}
                     `;
-                    // 심사 질문 버튼 활성화
-                    enableEvaluationButtons();
                 } else {
                     // 설정이 없으면 설정 페이지로 이동
                     window.location.href = '/setup';

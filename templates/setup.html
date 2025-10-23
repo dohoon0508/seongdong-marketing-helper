@@ -435,7 +435,7 @@
                 const response = await fetch('/api/check-setup');
                 const data = await response.json();
                 
-                if (data.is_setup && data.setup_info) {
+                if (data.is_setup) {
                     // 이미 설정이 되어 있다면 대화 페이지로 이동
                     window.location.href = '/chat';
                 }
