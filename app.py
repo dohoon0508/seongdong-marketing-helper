@@ -40,28 +40,28 @@ RECENCY_BUFFER_DAYS = 90  # 최신성 버퍼 (일)
 # RAG 정책 매핑 (라우팅별 쿼터 및 가중치)
 RAG_POLICY = {
     "default": {
-        "quota": {"card": 6, "bizcsv": 3, "did": 1, "event": 2},
-        "w": {"card": 1.0, "bizcsv": 0.85, "did": 0.9, "event": 0.8}
+        "quota": {"card": 8, "bizcsv": 3, "did": 1, "event": 2},
+        "w": {"card": 2.0, "bizcsv": 0.7, "did": 0.8, "event": 0.6}
     },
     "trend": {
-        "quota": {"card": 4, "bizcsv": 2, "did": 1, "event": 5},
-        "w": {"card": 1.0, "bizcsv": 0.85, "did": 0.9, "event": 1.0}
+        "quota": {"card": 6, "bizcsv": 2, "did": 1, "event": 5},
+        "w": {"card": 2.0, "bizcsv": 0.7, "did": 0.8, "event": 0.9}
     },
     "retention": {
-        "quota": {"card": 5, "bizcsv": 3, "did": 2, "event": 2},
-        "w": {"card": 1.0, "bizcsv": 0.85, "did": 1.0, "event": 0.8}
+        "quota": {"card": 7, "bizcsv": 3, "did": 2, "event": 2},
+        "w": {"card": 2.0, "bizcsv": 0.7, "did": 0.9, "event": 0.6}
     },
     "diagnosis": {
-        "quota": {"card": 5, "bizcsv": 4, "did": 2, "event": 1},
-        "w": {"card": 1.0, "bizcsv": 0.9, "did": 0.95, "event": 0.6}
+        "quota": {"card": 7, "bizcsv": 4, "did": 2, "event": 1},
+        "w": {"card": 2.0, "bizcsv": 0.8, "did": 0.85, "event": 0.5}
     },
     "loyalty": {
-        "quota": {"card": 5, "bizcsv": 4, "did": 1, "event": 2},
-        "w": {"card": 1.0, "bizcsv": 0.9, "did": 0.9, "event": 0.8}
+        "quota": {"card": 7, "bizcsv": 4, "did": 1, "event": 2},
+        "w": {"card": 2.0, "bizcsv": 0.8, "did": 0.8, "event": 0.6}
     },
     "channel": {
-        "quota": {"card": 5, "bizcsv": 4, "did": 1, "event": 2},
-        "w": {"card": 1.0, "bizcsv": 0.9, "did": 0.85, "event": 0.85}
+        "quota": {"card": 7, "bizcsv": 4, "did": 1, "event": 2},
+        "w": {"card": 2.0, "bizcsv": 0.8, "did": 0.75, "event": 0.7}
     }
 }
 
@@ -237,8 +237,8 @@ def is_overloaded_error(msg):
 def get_model():
     """모델 가져오기"""
     if not os.getenv('GOOGLE_API_KEY'):
-        print("⚠️ 경고: GOOGLE_API_KEY가 설정되지 않았습니다.")
-        return None
+        print("⚠️ 경고: GOOGLE_API_KEY가 설정되지 않았습니다. 데모 모드로 실행됩니다.")
+        return "demo_model"  # API Key 없이도 작동하도록 수정
     else:
         print("✅ Google API Key가 설정되었습니다.")
         genai.configure(api_key=os.getenv('GOOGLE_API_KEY'))
@@ -374,14 +374,104 @@ def load_shinhan_data():
     
     return shinhan_data
 
-def search_card_jsonl(query, location="", industry="", top=18):
+def search_business_csv(query, location="", industry="", store_name="", top=18):
+    """업종/지역 CSV 데이터에서 가게 정보 검색"""
+    results = []
+    
+    # 업종별 파일 검색
+    if industry:
+        industry_file = os.path.join(app.root_path, 'documents', 'raw', '업종', f'area_profile_{industry}.csv')
+        if os.path.exists(industry_file):
+            try:
+                df = pd.read_csv(industry_file)
+                for row_num, row in df.iterrows():
+                    mct_nm = str(row.get('MCT_NM', '')).strip()
+                    content = f"가게명: {mct_nm}, 업종: {industry}, 지역: {row.get('HPSN_MCT_ZCD_NM', '')}"
+                    
+                    relevance = 1  # 기본 점수 제공
+                    
+                    # 쿼리 매칭
+                    if query.lower() in content.lower():
+                        relevance += 2
+                    
+                    # 지역 매칭
+                    if location and location.lower() in content.lower():
+                        relevance += 1
+                    
+                    # 가게 이름 매칭 (앞 두 글자)
+                    if store_name and len(store_name) >= 2:
+                        store_prefix = store_name[:2]
+                        if mct_nm and len(mct_nm) >= 2:
+                            mct_prefix = mct_nm[:2]
+                            if store_prefix == mct_prefix:
+                                relevance += 5  # 가게 이름 매칭 시 매우 높은 점수
+                                print(f"🏪 업종 파일에서 가게 이름 매칭: {store_name} ({store_prefix}) ↔ {mct_nm} ({mct_prefix})")
+                    
+                    if relevance > 0:
+                        results.append({
+                    'content': content,
+                            'source_type': 'business',
+                            'source_file': f'area_profile_{industry}.csv',
+                            'line_num': row_num + 1,
+                            'relevance': relevance,
+                            'citation': f"(출처: {industry} 업종 데이터)"
+                        })
+            except Exception as e:
+                print(f"업종 파일 읽기 실패: {e}")
+    
+    # 지역별 파일 검색
+    if location:
+        location_file = os.path.join(app.root_path, 'documents', 'raw', '지역', f'category_profile_{location}.csv')
+        if os.path.exists(location_file):
+            try:
+                df = pd.read_csv(location_file)
+                for row_num, row in df.iterrows():
+                    mct_nm = str(row.get('MCT_NM', '')).strip()
+                    content = f"가게명: {mct_nm}, 업종: {row.get('HPSN_MCT_BZN_CD_NM', '')}, 지역: {location}"
+                    
+                    relevance = 0
+                    
+                    # 쿼리 매칭
+                    if query.lower() in content.lower():
+                        relevance += 2
+                    
+                    # 업종 매칭
+                    if industry and industry.lower() in content.lower():
+                        relevance += 1
+                    
+                    # 가게 이름 매칭 (앞 두 글자)
+                    if store_name and len(store_name) >= 2:
+                        store_prefix = store_name[:2]
+                        if mct_nm and len(mct_nm) >= 2:
+                            mct_prefix = mct_nm[:2]
+                            if store_prefix == mct_prefix:
+                                relevance += 5  # 가게 이름 매칭 시 매우 높은 점수
+                                print(f"🏪 지역 파일에서 가게 이름 매칭: {store_name} ({store_prefix}) ↔ {mct_nm} ({mct_prefix})")
+                    
+                    if relevance > 0:
+                        results.append({
+                            'content': content,
+                            'source_type': 'location',
+                            'source_file': f'category_profile_{location}.csv',
+                            'line_num': row_num + 1,
+                            'relevance': relevance,
+                            'citation': f"(출처: {location} 지역 데이터)"
+                        })
+            except Exception as e:
+                print(f"지역 파일 읽기 실패: {e}")
+    
+    # 관련도 순으로 정렬
+    results.sort(key=lambda x: x['relevance'], reverse=True)
+    return results[:top]
+
+def search_card_jsonl(query, location="", industry="", store_name="", top=18):
     """신한카드 JSONL 데이터 검색"""
     shinhan_data = load_shinhan_data()
     results = []
     
     for item in shinhan_data:
         content = str(item.get('content', ''))
-        relevance = 0
+        relevance = 1  # 기본 점수 제공
         
         # 쿼리 매칭
         if query.lower() in content.lower():
@@ -392,6 +482,23 @@ def search_card_jsonl(query, location="", industry="", top=18):
             relevance += 1
         if industry and industry.lower() in content.lower():
             relevance += 1
+        
+        # 가게 이름 매칭 (MCT_NM 기반)
+        if store_name and len(store_name) >= 2:
+            # 입력된 가게 이름의 앞 두 글자
+            store_prefix = store_name[:2]
+            
+            # JSONL 데이터에서 MCT_NM 필드 확인
+            mct_nm = item.get('MCT_NM', '')
+            if mct_nm and len(mct_nm) >= 2:
+                mct_prefix = mct_nm[:2]
+                if store_prefix == mct_prefix:
+                    relevance += 3  # 가게 이름 매칭 시 높은 점수
+                    print(f"🏪 신한카드 데이터에서 가게 이름 매칭: {store_name} ({store_prefix}) ↔ {mct_nm} ({mct_prefix})")
+            
+            # content에서도 가게 이름 관련 정보 검색
+            if store_prefix.lower() in content.lower():
+                relevance += 1
         
         if relevance > 0:
             results.append({
@@ -543,14 +650,20 @@ def search_event_csv(query, location="", top=6, after=None):
     results.sort(key=lambda x: x['relevance'], reverse=True)
     return results[:top]
 
-def retrieve_with_policy(task, query, location="", industry="", today=None):
+def retrieve_with_policy(task, query, location="", industry="", store_name="", today=None):
     """RAG 정책에 따른 문서 검색 및 스코어링"""
     policy = RAG_POLICY.get(task, RAG_POLICY["default"])
     buckets = {"card": [], "bizcsv": [], "did": [], "event": []}
     
+    # 가게 이름 매칭 확인
+    store_name_matched = False
+    if store_name and len(store_name) >= 2:
+        store_name_matched = True
+        print(f"🏪 가게 이름 매칭 모드 활성화: {store_name}")
+    
     # 1) 소스별 1차 후보 검색
-    buckets["card"] = search_card_jsonl(query, location, industry, top=policy["quota"]["card"] * 3)
-    buckets["bizcsv"] = search_biz_csv(query, location, industry, top=policy["quota"]["bizcsv"] * 3)
+    buckets["card"] = search_card_jsonl(query, location, industry, store_name, top=policy["quota"]["card"] * 3)
+    buckets["bizcsv"] = search_business_csv(query, location, industry, store_name, top=policy["quota"]["bizcsv"] * 3)
     buckets["did"] = search_did(query, location, industry, top=policy["quota"]["did"] * 3)
     
     # 최신성 필터링을 위한 날짜 계산
@@ -563,9 +676,27 @@ def retrieve_with_policy(task, query, location="", industry="", today=None):
     
     buckets["event"] = search_event_csv(query, location, top=policy["quota"]["event"] * 3, after=after_date)
     
-    # 2) 스코어링 + 정렬
+    # 2) 스코어링 + 정렬 (신한카드분석 데이터 항상 1순위)
     def rank_items(items, source_type):
-        return sorted(items, key=lambda x: calculate_final_score(x, source_type, policy["w"]), reverse=True)
+        def custom_score(item):
+            base_score = calculate_final_score(item, source_type, policy["w"])
+            
+            # 신한카드분석 데이터는 항상 최우선순위
+            if source_type == "card":
+                base_score += 200  # 신한카드 데이터 항상 최우선
+            
+            # 가게 이름 매칭 시 추가 우선순위 부스트
+            if store_name_matched:
+                if source_type == "bizcsv":
+                    base_score += 80   # 업종/지역 CSV 데이터 우선
+                elif source_type == "did":
+                    base_score += 50   # DiD 데이터 중간 우선순위
+                elif source_type == "event":
+                    base_score += 20   # 이벤트 데이터 낮은 우선순위
+            
+            return base_score
+        
+        return sorted(items, key=custom_score, reverse=True)
     
     for source_type in buckets:
         buckets[source_type] = rank_items(buckets[source_type], source_type)
@@ -820,7 +951,13 @@ def chat_api():
         
         # Gemini API 호출
         model = get_model()
-        if model is None:
+        if model == "demo_model":
+            # 데모 모드: 간단한 응답 반환
+            return jsonify({
+                'message': f'🔍 데모 모드: "{user_message}"에 대한 응답입니다. Google API Key를 설정하면 더 정확한 분석을 제공할 수 있습니다.',
+                'session_id': session_id
+            })
+        elif model is None:
             return jsonify({
                 'message': '❌ Google API Key가 설정되지 않았습니다.',
                 'status': 'error'
@@ -830,14 +967,46 @@ def chat_api():
         task = detect_task_type(user_message)
         
         # 새로운 RAG 시스템으로 문서 검색
-        relevant_snippets = retrieve_with_policy(task, user_message, location, industry)
+        relevant_snippets = retrieve_with_policy(task, user_message, location, industry, store_name)
+        
+        # 필수 데이터 확인: 신한카드분석 또는 업종/지역 데이터 중 하나는 무조건 있어야 함
+        has_card_data = any(snippet.get('source_type') == 'card' for snippet in relevant_snippets)
+        has_business_data = any(snippet.get('source_type') == 'bizcsv' for snippet in relevant_snippets)
+        
+        if not (has_card_data or has_business_data):
+            # 데이터가 없을 때도 데모 응답 반환
+            return jsonify({
+                'message': f'🔍 "{user_message}"에 대한 답변입니다. (데이터 검색 중 문제가 발생했습니다. Google API Key를 설정하면 더 정확한 분석을 제공할 수 있습니다.)',
+                'session_id': session_id
+            })
         
         # 프롬프트 구성
         context_info = ""
+        store_data_found = False
+        
+        # 가게 이름 매칭 확인
+        if store_name and len(store_name) >= 2:
+            # 해당 가게의 실제 데이터가 있는지 확인
+            for snippet in relevant_snippets:
+                if snippet.get('source_type') == 'card' and snippet.get('relevance', 0) > 10:
+                    store_data_found = True
+                    break
+        
         if location or industry or store_name:
-            context_info = f"""
-📍 선택된 지역: {location if location else '미선택'}
-🏪 선택된 업종: {industry if industry else '미선택'}
+            if store_data_found:
+                context_info = f"""
+📍 지역: {location if location else '미선택'}
+🏪 업종: {industry if industry else '미선택'}
+🏢 가게명: {store_name if store_name else '미선택'}
+
+⚠️ 중요: '{store_name}' 가게의 실제 매출/고객 데이터가 발견되었습니다.
+위의 참고 데이터에서 '{store_name}' 가게의 구체적인 정보를 우선적으로 활용하여
+해당 가게에 특화된 정확한 분석과 조언을 제공해주세요.
+"""
+            else:
+                context_info = f"""
+📍 지역: {location if location else '미선택'}
+🏪 업종: {industry if industry else '미선택'}
 🏢 가게명: {store_name if store_name else '미선택'}
 
 위의 지역과 업종 정보를 고려하여 답변해주세요.
@@ -853,7 +1022,9 @@ def chat_api():
             for i, snippet in enumerate(relevant_snippets, 1):
                 rag_context += f"{i}. {snippet['content']} {snippet['citation']}\n"
         
-        prompt = f"""
+        # 프롬프트 구성
+        if store_data_found:
+            prompt = f"""
 안녕하세요! 저는 {expert_role}로서 성동구 소상공인 여러분을 도와드립니다.
 
 {context_info}
@@ -861,10 +1032,28 @@ def chat_api():
 
 질문: {user_message}
 
-위의 지역과 업종 정보를 반드시 고려하여 답변해주세요.
-참고 데이터가 있다면 출처와 함께 적극적으로 활용해주세요.
-모든 수치나 주장에는 반드시 출처를 표기해주세요.
-답변은 실용적이고 구체적으로 작성해주세요.
+⚠️ 중요 지시사항:
+1. 위의 참고 데이터에서 '{store_name}' 가게의 실제 매출, 고객 패턴, 업종별 분석 데이터를 우선적으로 활용하세요.
+2. 일반적인 마케팅 조언이 아닌, 해당 가게의 구체적인 데이터를 바탕으로 한 정확한 분석을 제공하세요.
+3. 모든 수치, 통계, 분석 결과에는 반드시 출처를 명시하세요.
+4. 답변은 해당 가게에 특화된 실용적이고 구체적인 방안으로 작성하세요.
+5. 출처가 포함되지 않은 답변은 잘못된 것으로 간주됩니다.
+"""
+        else:
+            prompt = f"""
+안녕하세요! 저는 {expert_role}로서 성동구 소상공인 여러분을 도와드립니다.
+
+{context_info}
+{rag_context}
+
+질문: {user_message}
+
+⚠️ 중요 지시사항:
+1. 위의 참고 데이터를 반드시 활용하여 답변하세요. 데이터 없이는 답변하지 마세요.
+2. 모든 수치, 통계, 분석 결과에는 반드시 출처를 명시하세요.
+3. 신한카드분석 데이터나 업종/지역 데이터를 우선적으로 활용하세요.
+4. 답변은 실용적이고 구체적으로 작성하세요.
+5. 출처가 포함되지 않은 답변은 잘못된 것으로 간주됩니다.
 """
         
         # Gemini API 호출
