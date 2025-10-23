@@ -22,8 +22,8 @@ user_setups = {}  # 사용자 설정 저장
 response_cache = {}  # 응답 캐시
 
 # ====== 상수 ======
-GEN_MAX_OUTPUT_TOKENS = 2048
-GEN_TIMEOUT_SEC = 120
+GEN_MAX_OUTPUT_TOKENS = 4096
+GEN_TIMEOUT_SEC = 180
 MD_TIMEOUT_SEC = 10
 RETRY_MAX = 3
 RETRY_BASE = 2
