@@ -18,7 +18,8 @@ git push origin main
 4. 설정:
    - **Environment**: Python
    - **Build Command**: `pip install -r requirements.txt`
-   - **Start Command**: `gunicorn app:app`
+   - **Start Command**: `gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 60`
+   - **Health Check Path**: `/health`
    - **Port**: 10000 (자동 설정)
 
 ### 3. 환경변수 설정
@@ -65,3 +66,34 @@ python app.py
 - RAG 시스템을 통한 데이터 기반 답변
 - 달력 이벤트 관리
 - 메뉴별 맞춤 프롬프트
+
+## 🔧 502 에러 해결 체크리스트
+
+### 1. 로그 확인 (가장 중요)
+- **Render Dashboard** → **해당 서비스** → **Logs**
+- **Build logs**: 설치/빌드 에러 확인
+- **Runtime logs**: 부팅 후 예외, OOM, 포트 에러, 임포트 실패 등
+
+### 2. 시작 커맨드 점검
+- ✅ **Procfile**: `gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 60`
+- ✅ **requirements.txt**: `flask`, `gunicorn` 포함
+- ✅ **app.py**: `app = Flask(__name__)` 구조
+
+### 3. 포트/바인딩 설정
+- ✅ **Gunicorn**: `--bind 0.0.0.0:$PORT` 사용
+- ✅ **Flask**: `app.run()` 대신 Gunicorn 사용
+
+### 4. 헬스체크 엔드포인트
+- ✅ **Health Check Path**: `/health`
+- ✅ **엔드포인트**: `@app.route('/health')` 추가
+
+### 5. 환경변수 설정
+- ✅ **GOOGLE_API_KEY**: Google Gemini API 키
+- ✅ **FLASK_ENV**: production
+- ✅ **PORT**: 10000 (자동 설정)
+
+### 6. 성능 최적화
+- ✅ **Workers**: 2개 (프리티어 권장)
+- ✅ **Threads**: 4개
+- ✅ **Timeout**: 60초
+- ✅ **메모리**: 적정 사용량 유지

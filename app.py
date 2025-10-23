@@ -585,8 +585,17 @@ def get_calendar_events():
     except Exception as e:
         return jsonify({'error': f'이벤트 데이터 로드 실패: {str(e)}'}), 500
 
+@app.route('/health', methods=['GET'])
+def health_check():
+    """헬스체크 엔드포인트"""
+    return jsonify({'status': 'ok', 'service': 'seongdong-marketing-helper'}), 200
+
 if __name__ == '__main__':
     import os
     port = int(os.environ.get('PORT', 8080))
     app.run(debug=False, host='0.0.0.0', port=port)
+else:
+    # Render에서 Gunicorn으로 실행될 때는 이 부분이 실행되지 않음
+    # Gunicorn이 직접 app 객체를 import하여 사용
+    pass
 
