@@ -28,6 +28,12 @@ Render Dashboard → Environment에서 추가:
 - `FLASK_ENV`: production
 - `PORT`: 10000
 
+#### 🔑 Google API Key 설정 방법:
+1. [Google AI Studio](https://makersuite.google.com/app/apikey) 접속
+2. **Create API Key** 클릭
+3. 생성된 키를 Render Environment에 `GOOGLE_API_KEY`로 추가
+4. **주의**: API Key는 Secret으로 설정하여 보안 유지
+
 ### 4. 배포 완료
 - 자동으로 HTTPS URL 제공
 - 도메인 설정 가능
@@ -97,3 +103,32 @@ python app.py
 - ✅ **Threads**: 4개
 - ✅ **Timeout**: 60초
 - ✅ **메모리**: 적정 사용량 유지
+
+## 🔑 Google API 오류 해결
+
+### 1. API Key 관련 오류
+- **오류**: `API_KEY` 또는 `authentication` 관련 오류
+- **해결**: Render Dashboard → Environment에서 `GOOGLE_API_KEY` 확인
+- **방법**: [Google AI Studio](https://makersuite.google.com/app/apikey)에서 새 키 생성
+
+### 2. 할당량 초과 오류
+- **오류**: `quota` 또는 `limit` 관련 오류
+- **해결**: 1시간 후 다시 시도 또는 더 간단한 질문 사용
+- **방법**: Google Cloud Console에서 할당량 확인
+
+### 3. 일반적인 오류
+- **오류**: 기타 API 관련 오류
+- **해결**: 로그 확인 후 관리자에게 문의
+- **방법**: Render Dashboard → Logs에서 상세 오류 확인
+
+### 4. 환경변수 확인
+```bash
+# 로컬에서 테스트
+export GOOGLE_API_KEY=your_api_key_here
+python app.py
+```
+
+### 5. API Key 보안
+- ✅ **Secret으로 설정**: Render에서 API Key를 Secret으로 설정
+- ✅ **환경변수 사용**: 코드에 직접 하드코딩하지 않음
+- ✅ **정기 갱신**: 보안을 위해 정기적으로 API Key 갱신

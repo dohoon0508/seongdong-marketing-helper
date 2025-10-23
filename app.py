@@ -18,7 +18,12 @@ CORS(app)
 
 # Gemini API 설정
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
-genai.configure(api_key=GOOGLE_API_KEY)
+if not GOOGLE_API_KEY:
+    print("⚠️ 경고: GOOGLE_API_KEY가 설정되지 않았습니다.")
+    print("Render Dashboard → Environment에서 GOOGLE_API_KEY를 설정해주세요.")
+else:
+    print("✅ Google API Key가 설정되었습니다.")
+    genai.configure(api_key=GOOGLE_API_KEY)
 
 # Gemini Flash 2.5 모델 설정 (무료 버전)
 model = genai.GenerativeModel('gemini-2.5-flash')
@@ -453,6 +458,13 @@ def chat():
         
         # Gemini API 호출 (RAG 컨텍스트 포함) - 타임아웃 설정
         try:
+            # API Key 확인
+            if not GOOGLE_API_KEY:
+                return jsonify({
+                    'message': '❌ Google API Key가 설정되지 않았습니다. 관리자에게 문의하세요.',
+                    'session_id': session_id
+                }), 500
+            
             direct_model = genai.GenerativeModel('gemini-2.5-flash')
             
             # RAG 컨텍스트를 포함한 완전한 프롬프트 (길이 제한)
@@ -528,7 +540,53 @@ def chat():
 더 간단한 질문으로 다시 시도해주세요! 🚀"""
         except Exception as api_error:
             print(f"❌ API Error: {str(api_error)}")
-            response_text = f"죄송합니다. 일시적인 오류가 발생했습니다: {str(api_error)}"
+            
+            # Google API 관련 오류 처리
+            if "API_KEY" in str(api_error) or "authentication" in str(api_error).lower():
+                response_text = """## 🔑 API 인증 오류
+
+Google API Key가 올바르지 않거나 설정되지 않았습니다.
+
+### 🔧 해결 방법:
+1. **Render Dashboard** → **Environment**에서 `GOOGLE_API_KEY` 확인
+2. **Google AI Studio**에서 새로운 API Key 생성
+3. **관리자에게 문의**하세요
+
+### 📝 API Key 설정 방법:
+1. [Google AI Studio](https://makersuite.google.com/app/apikey) 접속
+2. **Create API Key** 클릭
+3. 생성된 키를 Render Environment에 추가
+"""
+            elif "quota" in str(api_error).lower() or "limit" in str(api_error).lower():
+                response_text = """## 📊 API 할당량 초과
+
+Google API 사용량이 한도를 초과했습니다.
+
+### 🔧 해결 방법:
+1. **잠시 후 다시 시도**해주세요 (보통 1시간 후 복구)
+2. **더 간단한 질문**으로 시도해주세요
+3. **관리자에게 문의**하세요
+
+### 💡 빠른 질문 예시:
+- "성동구 팝업 알려줘"
+- "마케팅 전략 추천해줘"
+"""
+            else:
+                response_text = f"""## ❌ 일시적인 오류 발생
+
+죄송합니다. 시스템에 일시적인 오류가 발생했습니다.
+
+### 🔧 해결 방법:
+1. **잠시 후 다시 시도**해주세요
+2. **더 간단한 질문**으로 시도해주세요
+3. **문제가 지속되면 관리자에게 문의**하세요
+
+### 📝 오류 정보:
+```
+{str(api_error)}
+```
+
+더 간단한 질문으로 다시 시도해주세요! 🚀"""
         
         # response_text가 이미 설정되어 있음 (테스트 응답 또는 API 응답)
         
