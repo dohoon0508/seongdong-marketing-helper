@@ -1283,6 +1283,13 @@
             <p id="selectedLocation"></p>
             <p id="selectedIndustry"></p>
         </div>
+        
+        <!-- 적용 버튼 -->
+        <div style="margin-top: 15px;">
+            <button onclick="applySettings()" style="width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">
+                ✅ 설정 적용
+            </button>
+        </div>
     </div>
 
     <!-- 메인 컨텐츠 -->
@@ -1937,6 +1944,25 @@
                 toggleIcon.textContent = '☰';
             } else {
                 toggleIcon.textContent = '✕';
+            }
+        }
+
+        function applySettings() {
+            const locationSelect = document.getElementById('locationSelect');
+            const industrySelect = document.getElementById('industrySelect');
+            const customIndustry = document.getElementById('customIndustry');
+            
+            const location = locationSelect.value;
+            let industry = industrySelect.value;
+            
+            if (industry === '직접입력') {
+                industry = customIndustry.value;
+            }
+            
+            if (location || industry) {
+                alert(`✅ 설정이 적용되었습니다!\n📍 지역: ${location || '미선택'}\n🏢 업종: ${industry || '미선택'}\n\n이제 질문을 입력하면 선택된 정보가 반영됩니다.`);
+            } else {
+                alert('⚠️ 지역 또는 업종을 선택해주세요.');
             }
         }
     </script>
