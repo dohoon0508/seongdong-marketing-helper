@@ -16,33 +16,51 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app)
 
-# Gemini API 설정
+# Gemini API 설정 (지연 로딩)
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
-if not GOOGLE_API_KEY:
-    print("⚠️ 경고: GOOGLE_API_KEY가 설정되지 않았습니다.")
-    print("Render Dashboard → Environment에서 GOOGLE_API_KEY를 설정해주세요.")
-    model = None  # API Key가 없으면 모델을 None으로 설정
-else:
-    print("✅ Google API Key가 설정되었습니다.")
-    genai.configure(api_key=GOOGLE_API_KEY)
-    # Gemini Flash 2.5 모델 설정 (무료 버전)
-    model = genai.GenerativeModel('gemini-2.5-flash')
+_model = None  # 지연 로딩을 위한 전역 변수
+
+def get_model():
+    """지연 로딩으로 모델 가져오기"""
+    global _model
+    if _model is None:
+        if not GOOGLE_API_KEY:
+            print("⚠️ 경고: GOOGLE_API_KEY가 설정되지 않았습니다.")
+            print("Render Dashboard → Environment에서 GOOGLE_API_KEY를 설정해주세요.")
+            return None
+        else:
+            print("✅ Google API Key가 설정되었습니다.")
+            genai.configure(api_key=GOOGLE_API_KEY)
+            # Gemini Flash 2.5 모델 설정 (무료 버전)
+            _model = genai.GenerativeModel('gemini-2.5-flash')
+            print("🤖 Gemini 모델 로드 완료")
+    return _model
 
 # 대화 히스토리 저장
 chat_sessions = {}
 
-# RAG 문서 저장소
-rag_documents = {}
+# RAG 문서 저장소 (지연 로딩)
+_rag_documents = None
+_document_index = None
+_response_cache = {}
 
-# 문서 인덱스 (빠른 검색을 위한 키워드 매핑)
-document_index = {
-    'keywords': {},  # 키워드 -> 문서 리스트
-    'categories': {},  # 카테고리 -> 문서 리스트
-    'entities': {}  # 개체명 -> 문서 리스트
-}
+def get_rag_documents():
+    """지연 로딩으로 RAG 문서 가져오기"""
+    global _rag_documents
+    if _rag_documents is None:
+        print("📚 RAG 문서 로딩 시작...")
+        _rag_documents = load_rag_documents()
+        print(f"📚 문서 로드 완료: {len(_rag_documents)}개")
+    return _rag_documents
 
-# 응답 캐시 (자주 묻는 질문에 대한 빠른 응답)
-response_cache = {}
+def get_document_index():
+    """지연 로딩으로 문서 인덱스 가져오기"""
+    global _document_index
+    if _document_index is None:
+        print("🔍 문서 인덱스 구축 시작...")
+        _document_index = build_document_index()
+        print(f"🔍 인덱스 구축 완료: {len(_document_index['keywords'])}개 키워드")
+    return _document_index
 
 def load_rag_documents():
     """documents/raw 폴더의 모든 파일을 로드하여 RAG 시스템에 저장"""
@@ -164,7 +182,11 @@ def classify_document(filename, content):
         return '기타'
 
 def search_relevant_documents(query, max_docs=3):
-    """스마트 검색: 인덱스 기반 빠른 검색"""
+    """스마트 검색: 인덱스 기반 빠른 검색 (지연 로딩)"""
+    # 지연 로딩으로 문서와 인덱스 가져오기
+    rag_documents = get_rag_documents()
+    document_index = get_document_index()
+    
     if not rag_documents:
         return []
     
@@ -420,7 +442,7 @@ def chat():
         menu_type = data.get('menu_type', None)
         system_context = get_system_prompt(menu_type)
         
-        # RAG: 관련 문서 검색
+        # RAG: 관련 문서 검색 (지연 로딩)
         relevant_docs = search_relevant_documents(user_message)
         
         # RAG 컨텍스트 추가
@@ -458,16 +480,14 @@ def chat():
         
         # Gemini API 호출 (RAG 컨텍스트 포함) - 타임아웃 설정
         try:
-            # API Key 및 모델 확인
-            if not GOOGLE_API_KEY or model is None:
+            # 지연 로딩으로 모델 가져오기
+            direct_model = get_model()
+            if direct_model is None:
                 print("❌ API Key 또는 모델이 설정되지 않음")
                 return jsonify({
                     'message': '❌ Google API Key가 설정되지 않았습니다. 관리자에게 문의하세요.',
                     'session_id': session_id
                 }), 500
-            
-            # 모델이 이미 설정되어 있으므로 직접 사용
-            direct_model = model
             
             # RAG 컨텍스트를 포함한 완전한 프롬프트 (길이 제한)
             full_prompt = f"{system_context}{rag_context}\n\n사용자 질문: {user_message}"
@@ -485,8 +505,22 @@ def chat():
             
             def api_call():
                 try:
-                    response = direct_model.generate_content(full_prompt)
-                    result_queue.put(('success', response.text))
+                    # 외부 API 호출에 타임아웃 및 재시도 추가
+                    import time
+                    max_retries = 3
+                    retry_delay = 2
+                    
+                    for attempt in range(max_retries):
+                        try:
+                            response = direct_model.generate_content(full_prompt)
+                            result_queue.put(('success', response.text))
+                            return
+                        except Exception as e:
+                            if attempt < max_retries - 1:
+                                print(f"⚠️ API 호출 실패 (시도 {attempt + 1}/{max_retries}): {str(e)}")
+                                time.sleep(retry_delay * (attempt + 1))  # 지수 백오프
+                            else:
+                                result_queue.put(('error', str(e)))
                 except Exception as e:
                     result_queue.put(('error', str(e)))
             
