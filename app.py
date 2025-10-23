@@ -29,6 +29,193 @@ RETRY_MAX = 3
 RETRY_BASE = 2
 RETRY_JITTER = 1
 
+# ====== RAG 정책 상수 ======
+K_TOTAL = 12  # 후보 문서 총량
+K_ANSWER = 6  # 최종 스니펫 수
+SNIPPET_MIN_LENGTH = 450
+SNIPPET_MAX_LENGTH = 700
+DUPLICATE_THRESHOLD = 0.7  # Jaccard 유사도 임계값
+RECENCY_BUFFER_DAYS = 90  # 최신성 버퍼 (일)
+
+# RAG 정책 매핑 (라우팅별 쿼터 및 가중치)
+RAG_POLICY = {
+    "default": {
+        "quota": {"card": 6, "bizcsv": 3, "did": 1, "event": 2},
+        "w": {"card": 1.0, "bizcsv": 0.85, "did": 0.9, "event": 0.8}
+    },
+    "trend": {
+        "quota": {"card": 4, "bizcsv": 2, "did": 1, "event": 5},
+        "w": {"card": 1.0, "bizcsv": 0.85, "did": 0.9, "event": 1.0}
+    },
+    "retention": {
+        "quota": {"card": 5, "bizcsv": 3, "did": 2, "event": 2},
+        "w": {"card": 1.0, "bizcsv": 0.85, "did": 1.0, "event": 0.8}
+    },
+    "diagnosis": {
+        "quota": {"card": 5, "bizcsv": 4, "did": 2, "event": 1},
+        "w": {"card": 1.0, "bizcsv": 0.9, "did": 0.95, "event": 0.6}
+    },
+    "loyalty": {
+        "quota": {"card": 5, "bizcsv": 4, "did": 1, "event": 2},
+        "w": {"card": 1.0, "bizcsv": 0.9, "did": 0.9, "event": 0.8}
+    },
+    "channel": {
+        "quota": {"card": 5, "bizcsv": 4, "did": 1, "event": 2},
+        "w": {"card": 1.0, "bizcsv": 0.9, "did": 0.85, "event": 0.85}
+    }
+}
+
+# 전문가 역할 매핑
+EXPERT_ROLES = {
+    "trend": "트렌드 분석 전문가",
+    "retention": "고객 유지 전문가", 
+    "diagnosis": "문제 진단 전문가",
+    "loyalty": "고객 충성도 전문가",
+    "channel": "마케팅 채널 전문가",
+    "default": "성동구 마케팅 전문가"
+}
+
+# ====== RAG 유틸리티 함수 ======
+def jaccard_similarity(text1, text2):
+    """Jaccard 유사도 계산"""
+    words1 = set(text1.lower().split())
+    words2 = set(text2.lower().split())
+    intersection = len(words1.intersection(words2))
+    union = len(words1.union(words2))
+    return intersection / union if union > 0 else 0
+
+def simple_bm25_score(text, query_terms):
+    """간단한 BM25 스코어 계산"""
+    text_lower = text.lower()
+    score = 0
+    for term in query_terms:
+        count = text_lower.count(term.lower())
+        if count > 0:
+            score += count * 1.2  # 간단한 가중치
+    return score
+
+def entity_match_score(text, location="", industry="", task_keywords=None):
+    """엔티티 매칭 스코어 계산"""
+    score = 0
+    text_lower = text.lower()
+    
+    # 지역/업종 일치
+    if location and location.lower() in text_lower:
+        score += 0.5
+    if industry and industry.lower() in text_lower:
+        score += 0.5
+    if location and industry and location.lower() in text_lower and industry.lower() in text_lower:
+        score += 0.2  # 둘 다 일치 시 추가 보너스
+    
+    # 태스크 키워드 매칭
+    if task_keywords:
+        for keyword in task_keywords:
+            if keyword.lower() in text_lower:
+                score += 0.1
+        score = min(score, 0.3)  # 상한 0.3
+    
+    return score
+
+def recency_score(text, source_type, today=None):
+    """최신성 스코어 계산"""
+    if not today:
+        from datetime import datetime
+        today = datetime.now()
+    
+    score = 0
+    if source_type == "event":
+        # 이벤트는 날짜 정보 추출하여 최신성 계산
+        # 실제 구현에서는 날짜 파싱 로직 필요
+        score = 0.5  # 기본값
+    else:
+        # 다른 소스는 낮은 최신성 영향
+        score = 0.1
+    
+    return score
+
+def numerics_score(text):
+    """수치 포함 스코어 계산"""
+    import re
+    # 퍼센트, 숫자, 시간대 패턴 매칭
+    patterns = [
+        r'\d+%',  # 퍼센트
+        r'\d+\.\d+',  # 소수점
+        r'\d+:\d+',  # 시간
+        r'\d+-\d+시'  # 시간대
+    ]
+    
+    score = 0
+    for pattern in patterns:
+        matches = re.findall(pattern, text)
+        score += len(matches) * 0.05
+    
+    return min(score, 0.2)  # 상한 0.2
+
+def diversity_boost_score(text, picked_texts):
+    """다양성 부스트 스코어 계산"""
+    if not picked_texts:
+        return 0
+    
+    # 동일 파일 연속 과밀 시 감점
+    penalty = 0
+    for picked in picked_texts[-2:]:  # 최근 2개와 비교
+        if jaccard_similarity(text, picked) > 0.8:
+            penalty += 0.1
+    
+    return -penalty
+
+def calculate_final_score(item, source_type, policy_weights, picked_items=None):
+    """최종 스코어 계산"""
+    text = item.get('content', '')
+    location = item.get('location', '')
+    industry = item.get('industry', '')
+    
+    # 각 컴포넌트 스코어 계산
+    bm25_score = simple_bm25_score(text, [location, industry]) if location or industry else 0.5
+    entity_score = entity_match_score(text, location, industry)
+    recency_score_val = recency_score(text, source_type)
+    source_weight = policy_weights.get(source_type, 1.0)
+    numerics_score_val = numerics_score(text)
+    diversity_score = diversity_boost_score(text, [p.get('content', '') for p in picked_items or []])
+    
+    # 가중 합계
+    final_score = (
+        0.35 * bm25_score +
+        0.20 * entity_score +
+        0.15 * recency_score_val +
+        0.15 * source_weight +
+        0.10 * numerics_score_val +
+        0.05 * diversity_score
+    )
+    
+    return final_score
+
+def truncate_with_sentence(text, max_length):
+    """문장 경계를 유지하며 텍스트 자르기"""
+    if len(text) <= max_length:
+        return text
+    
+    # 문장 단위로 자르기
+    sentences = text.split('. ')
+    result = ""
+    for sentence in sentences:
+        if len(result + sentence + '. ') <= max_length:
+            result += sentence + '. '
+        else:
+            break
+    
+    return result.strip()
+
+def format_citation(source_type, source_file, line_num=None):
+    """출처 표기 포맷 생성"""
+    citation_map = {
+        "card": f"신한카드분석.jsonl#{line_num or 'unknown'}",
+        "bizcsv": f"업종별데이터/{source_file}#row{line_num or 'unknown'}",
+        "did": f"did.csv#row{line_num or 'unknown'}",
+        "event": f"{source_file}#row{line_num or 'unknown'}"
+    }
+    return f"(출처: {citation_map.get(source_type, source_file)})"
+
 # ====== 유틸리티 함수 ======
 def safe_markdown(text):
     """안전한 마크다운 변환"""
@@ -168,16 +355,17 @@ def load_calendar_events():
     return events
 
 def load_shinhan_data():
-    """신한카드 분석 데이터 로드"""
+    """신한카드 데이터 로드"""
     shinhan_data = []
-    jsonl_path = os.path.join(app.root_path, 'documents', 'raw', '신한카드분석.jsonl')
-    
     try:
-        if os.path.exists(jsonl_path):
-            with open(jsonl_path, 'r', encoding='utf-8') as f:
-                for line in f:
+        shinhan_file = os.path.join(app.root_path, 'documents', 'raw', '신한카드분석.jsonl')
+        if os.path.exists(shinhan_file):
+            with open(shinhan_file, 'r', encoding='utf-8') as f:
+                for line_num, line in enumerate(f, 1):
                     try:
                         data = json.loads(line.strip())
+                        data['line_num'] = line_num
+                        data['source_type'] = 'card'
                         shinhan_data.append(data)
                     except json.JSONDecodeError:
                         continue
@@ -186,33 +374,300 @@ def load_shinhan_data():
     
     return shinhan_data
 
-def search_relevant_documents(query, location="", industry=""):
-    """관련 문서 검색"""
+def search_card_jsonl(query, location="", industry="", top=18):
+    """신한카드 JSONL 데이터 검색"""
     shinhan_data = load_shinhan_data()
-    relevant_snippets = []
+    results = []
     
-    # 신한카드 데이터에서 관련 스니펫 검색
     for item in shinhan_data:
         content = str(item.get('content', ''))
+        relevance = 0
+        
+        # 쿼리 매칭
         if query.lower() in content.lower():
-            relevant_snippets.append({
-                'content': content[:500],  # 첫 500자만
-                'source': '신한카드분석.jsonl',
-                'priority': 1
+            relevance += 2
+        
+        # 지역/업종 매칭
+        if location and location.lower() in content.lower():
+            relevance += 1
+        if industry and industry.lower() in content.lower():
+            relevance += 1
+        
+        if relevance > 0:
+            results.append({
+                'content': content,
+                'source_type': 'card',
+                'source_file': '신한카드분석.jsonl',
+                'line_num': item.get('line_num', 0),
+                'location': location,
+                'industry': industry,
+                'relevance': relevance,
+                'original_data': item
             })
     
-    # 지역/업종 매칭
-    if location or industry:
-        for item in shinhan_data:
-            content = str(item.get('content', ''))
-            if (location and location in content) or (industry and industry in content):
-                relevant_snippets.append({
-                    'content': content[:500],
-                    'source': '신한카드분석.jsonl',
-                    'priority': 1
-                })
+    # 관련성 순으로 정렬하고 상위 N개 반환
+    results.sort(key=lambda x: x['relevance'], reverse=True)
+    return results[:top]
+
+def search_biz_csv(query, location="", industry="", top=9):
+    """업종/지역 CSV 데이터 검색"""
+    results = []
+    csv_files = []
     
-    return relevant_snippets[:3]  # 상위 3개만 반환
+    # 업종별 CSV 파일들 찾기
+    biz_dir = os.path.join(app.root_path, 'documents', 'raw', '업종')
+    region_dir = os.path.join(app.root_path, 'documents', 'raw', '지역')
+    
+    for directory in [biz_dir, region_dir]:
+        if os.path.exists(directory):
+            for filename in os.listdir(directory):
+                if filename.endswith('.csv'):
+                    csv_files.append(os.path.join(directory, filename))
+    
+    for csv_file in csv_files:
+        try:
+            df = pd.read_csv(csv_file, encoding='utf-8')
+            for row_num, row in df.iterrows():
+                # CSV 행을 텍스트로 변환
+                content = ' '.join([str(val) for val in row.values if pd.notna(val)])
+                
+                relevance = 0
+                if query.lower() in content.lower():
+                    relevance += 2
+                if location and location.lower() in content.lower():
+                    relevance += 1
+                if industry and industry.lower() in content.lower():
+                    relevance += 1
+                
+                if relevance > 0:
+                    results.append({
+                        'content': content,
+                        'source_type': 'bizcsv',
+                        'source_file': os.path.basename(csv_file),
+                        'line_num': row_num + 1,
+                        'location': location,
+                        'industry': industry,
+                        'relevance': relevance,
+                        'original_data': row.to_dict()
+                    })
+        except Exception as e:
+            print(f"Error reading {csv_file}: {e}")
+            continue
+    
+    results.sort(key=lambda x: x['relevance'], reverse=True)
+    return results[:top]
+
+def search_did(query, location="", industry="", top=3):
+    """DiD 분석 데이터 검색"""
+    results = []
+    did_file = os.path.join(app.root_path, 'documents', 'raw', 'did.csv')
+    
+    if os.path.exists(did_file):
+        try:
+            df = pd.read_csv(did_file, encoding='utf-8')
+            for row_num, row in df.iterrows():
+                content = ' '.join([str(val) for val in row.values if pd.notna(val)])
+                
+                relevance = 0
+                if query.lower() in content.lower():
+                    relevance += 2
+                if location and location.lower() in content.lower():
+                    relevance += 1
+                if industry and industry.lower() in content.lower():
+                    relevance += 1
+                
+                if relevance > 0:
+                    results.append({
+                        'content': content,
+                        'source_type': 'did',
+                        'source_file': 'did.csv',
+                        'line_num': row_num + 1,
+                        'location': location,
+                        'industry': industry,
+                        'relevance': relevance,
+                        'original_data': row.to_dict()
+                    })
+        except Exception as e:
+            print(f"Error reading did.csv: {e}")
+    
+    results.sort(key=lambda x: x['relevance'], reverse=True)
+    return results[:top]
+
+def search_event_csv(query, location="", top=6, after=None):
+    """이벤트 CSV 데이터 검색"""
+    results = []
+    event_files = [
+        '성동구 공통_한양대_흥행영화 이벤트 DB.csv',
+        '성수 팝업 최종.csv'
+    ]
+    
+    for filename in event_files:
+        file_path = os.path.join(app.root_path, 'documents', 'raw', filename)
+        if os.path.exists(file_path):
+            try:
+                df = pd.read_csv(file_path, encoding='utf-8')
+                for row_num, row in df.iterrows():
+                    content = ' '.join([str(val) for val in row.values if pd.notna(val)])
+                    
+                    relevance = 0
+                    if query.lower() in content.lower():
+                        relevance += 2
+                    if location and location.lower() in content.lower():
+                        relevance += 1
+                    
+                    # 최신성 체크 (after 날짜 이후만)
+                    if after and 'start_date' in row:
+                        try:
+                            from datetime import datetime
+                            event_date = datetime.strptime(str(row['start_date']), '%Y.%m.%d')
+                            if event_date < after:
+                                continue
+                        except:
+                            pass
+                    
+                    if relevance > 0:
+                        results.append({
+                            'content': content,
+                            'source_type': 'event',
+                            'source_file': filename,
+                            'line_num': row_num + 1,
+                            'location': location,
+                            'industry': '',
+                            'relevance': relevance,
+                            'original_data': row.to_dict()
+                        })
+            except Exception as e:
+                print(f"Error reading {filename}: {e}")
+                continue
+    
+    results.sort(key=lambda x: x['relevance'], reverse=True)
+    return results[:top]
+
+def retrieve_with_policy(task, query, location="", industry="", today=None):
+    """RAG 정책에 따른 문서 검색 및 스코어링"""
+    policy = RAG_POLICY.get(task, RAG_POLICY["default"])
+    buckets = {"card": [], "bizcsv": [], "did": [], "event": []}
+    
+    # 1) 소스별 1차 후보 검색
+    buckets["card"] = search_card_jsonl(query, location, industry, top=policy["quota"]["card"] * 3)
+    buckets["bizcsv"] = search_biz_csv(query, location, industry, top=policy["quota"]["bizcsv"] * 3)
+    buckets["did"] = search_did(query, location, industry, top=policy["quota"]["did"] * 3)
+    
+    # 최신성 필터링을 위한 날짜 계산
+    if today is None:
+        from datetime import datetime, timedelta
+        today = datetime.now()
+        after_date = today - timedelta(days=RECENCY_BUFFER_DAYS)
+    else:
+        after_date = today - timedelta(days=RECENCY_BUFFER_DAYS)
+    
+    buckets["event"] = search_event_csv(query, location, top=policy["quota"]["event"] * 3, after=after_date)
+    
+    # 2) 스코어링 + 정렬
+    def rank_items(items, source_type):
+        return sorted(items, key=lambda x: calculate_final_score(x, source_type, policy["w"]), reverse=True)
+    
+    for source_type in buckets:
+        buckets[source_type] = rank_items(buckets[source_type], source_type)
+    
+    # 3) 쿼터 컷 + 중복 제거 + 폴백
+    picked = []
+    picked_texts = []
+    
+    for source_type in ["card", "bizcsv", "did", "event"]:
+        quota = policy["quota"][source_type]
+        source_items = buckets[source_type]
+        
+        for item in source_items[:quota]:
+            # 중복 제거 체크
+            is_duplicate = False
+            for picked_text in picked_texts:
+                if jaccard_similarity(item['content'], picked_text) > DUPLICATE_THRESHOLD:
+                    is_duplicate = True
+                    break
+            
+            if not is_duplicate:
+                picked.append(item)
+                picked_texts.append(item['content'])
+    
+    # 4) 강제 포함 규칙 체크
+    picked = ensure_mandatory_sources(picked, task, buckets, policy)
+    
+    # 5) 스니펫 길이 조정 + 출처 주석 생성
+    snippets = []
+    for item in picked[:K_ANSWER]:
+        content = truncate_with_sentence(item['content'], SNIPPET_MAX_LENGTH)
+        citation = format_citation(item['source_type'], item['source_file'], item['line_num'])
+        
+        snippets.append({
+            'content': content,
+            'source_type': item['source_type'],
+            'source_file': item['source_file'],
+            'line_num': item['line_num'],
+            'citation': citation,
+            'expert_role': EXPERT_ROLES.get(task, EXPERT_ROLES["default"])
+        })
+    
+    return snippets
+
+def ensure_mandatory_sources(picked, task, buckets, policy):
+    """필수 소스 포함 규칙 적용"""
+    # 신한카드 최소 2개 강제
+    card_count = len([p for p in picked if p['source_type'] == 'card'])
+    if card_count < 2 and buckets['card']:
+        for item in buckets['card']:
+            if item not in picked:
+                picked.append(item)
+                card_count += 1
+                if card_count >= 2:
+                    break
+    
+    # 태스크별 필수 소스 체크
+    if task == "trend" and len([p for p in picked if p['source_type'] == 'event']) == 0:
+        if buckets['event']:
+            picked.append(buckets['event'][0])
+    
+    if task in ["retention", "diagnosis"] and len([p for p in picked if p['source_type'] == 'did']) == 0:
+        if buckets['did']:
+            picked.append(buckets['did'][0])
+    
+    return picked
+
+def detect_task_type(query):
+    """질문 유형 감지하여 태스크 라우팅"""
+    query_lower = query.lower()
+    
+    # 트렌드 관련 키워드
+    trend_keywords = ['트렌드', '인기', '유행', '시즌', '계절', '벚꽃', '캘린더', '이벤트', '행사', '시즌']
+    if any(keyword in query_lower for keyword in trend_keywords):
+        return "trend"
+    
+    # 고객 유지 관련 키워드
+    retention_keywords = ['재방문', '고객유지', '리텐션', '단골', '충성', '만족도']
+    if any(keyword in query_lower for keyword in retention_keywords):
+        return "retention"
+    
+    # 문제 진단 관련 키워드
+    diagnosis_keywords = ['문제', '진단', '분석', '원인', '이유', '왜', '어떻게', '해결']
+    if any(keyword in query_lower for keyword in diagnosis_keywords):
+        return "diagnosis"
+    
+    # 고객 충성도 관련 키워드
+    loyalty_keywords = ['충성도', '브랜드', '애착', '선호도', '만족']
+    if any(keyword in query_lower for keyword in loyalty_keywords):
+        return "loyalty"
+    
+    # 채널 관련 키워드
+    channel_keywords = ['채널', '마케팅', '광고', '홍보', '소셜미디어', '온라인', '오프라인']
+    if any(keyword in query_lower for keyword in channel_keywords):
+        return "channel"
+    
+    # 기본값
+    return "default"
+
+def search_relevant_documents(query, location="", industry=""):
+    """기존 호환성을 위한 래퍼 함수"""
+    return retrieve_with_policy("default", query, location, industry)
 
 def call_gemini_with_retry(model, prompt: str):
     """안정화된 Gemini API 호출"""
@@ -371,8 +826,11 @@ def chat_api():
                 'status': 'error'
             }), 500
         
-        # RAG 검색
-        relevant_docs = search_relevant_documents(user_message, location, industry)
+        # 태스크 라우팅 (질문 유형 감지)
+        task = detect_task_type(user_message)
+        
+        # 새로운 RAG 시스템으로 문서 검색
+        relevant_snippets = retrieve_with_policy(task, user_message, location, industry)
         
         # 프롬프트 구성
         context_info = ""
@@ -385,24 +843,28 @@ def chat_api():
 위의 지역과 업종 정보를 고려하여 답변해주세요.
 """
         
-        # RAG 컨텍스트 추가
+        # 전문가 역할 식별
+        expert_role = EXPERT_ROLES.get(task, EXPERT_ROLES["default"])
+        
+        # RAG 컨텍스트 추가 (출처 포함)
         rag_context = ""
-        if relevant_docs:
-            rag_context = "\n\n[참고 데이터]\n"
-            for i, doc in enumerate(relevant_docs, 1):
-                rag_context += f"{i}. {doc['content']}\n"
+        if relevant_snippets:
+            rag_context = "\n\n[참고 데이터 - 출처 포함]\n"
+            for i, snippet in enumerate(relevant_snippets, 1):
+                rag_context += f"{i}. {snippet['content']} {snippet['citation']}\n"
         
         prompt = f"""
-안녕하세요! 성동구 소상공인 여러분을 위한 마케팅 도우미입니다.
+안녕하세요! 저는 {expert_role}로서 성동구 소상공인 여러분을 도와드립니다.
 
 {context_info}
 {rag_context}
 
 질문: {user_message}
 
-성동구 지역의 소상공인에게 도움이 되는 실용적인 마케팅 조언을 제공해주세요.
-특히 선택된 지역과 업종에 맞는 구체적이고 실용적인 조언을 해주세요.
-참고 데이터가 있다면 적극적으로 활용해주세요.
+위의 지역과 업종 정보를 반드시 고려하여 답변해주세요.
+참고 데이터가 있다면 출처와 함께 적극적으로 활용해주세요.
+모든 수치나 주장에는 반드시 출처를 표기해주세요.
+답변은 실용적이고 구체적으로 작성해주세요.
 """
         
         # Gemini API 호출
