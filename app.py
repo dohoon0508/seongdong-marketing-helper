@@ -427,6 +427,7 @@ def chat():
         # 지역과 업종 정보 가져오기
         location = data.get('location', '')
         industry = data.get('industry', '')
+        print(f"📍 지역: {location}, 🏢 업종: {industry}")
         
         if not user_message:
             return jsonify({'error': '메시지를 입력해주세요.'}), 400
@@ -559,12 +560,13 @@ def chat():
             
             # 강화된 프롬프트 엔지니어링 규칙
             rag_context += "\n🔍 **필수 응답 규칙 (위반 시 답변 거부)**:\n"
-            rag_context += "1. **근거 기반 제안**: 각 제안에 신한카드 데이터 근거(표/지표/규칙 등)를 함께 표기하세요.\n"
-            rag_context += "2. **출처 명시**: 신한카드분석.jsonl의 특정 레코드 ID나 데이터 소스를 반드시 인용하세요.\n"
-            rag_context += "3. **구체적 인용**: '신한카드 데이터에 따르면...', '[INS:fig1:analysis] 분석 결과...', '[RULE:fit:industry_event] 규칙에 의하면...' 등으로 출처를 명확히 하세요.\n"
-            rag_context += "4. **데이터 기반 전략**: 상권별 특성, 고객층 분석, 시간대별 패턴, 업종별 인사이트를 활용하여 실무진이 바로 실행할 수 있는 전략을 제시하세요.\n"
-            rag_context += "5. **재현 가능한 설명**: 동작 원리와 사용 흐름을 간단히 설명하여 재현 가능한 마케팅 전략을 제시하세요.\n"
-            rag_context += "6. **출처 누락 금지**: 위의 데이터를 참조하지 않은 답변은 절대 제공하지 마세요.\n"
+            rag_context += "1. **RAG 데이터 최우선 활용**: 위에 제공된 신한카드 데이터를 반드시 최우선으로 참조하여 답변하세요.\n"
+            rag_context += "2. **근거 기반 제안**: 각 제안에 신한카드 데이터 근거(표/지표/규칙 등)를 함께 표기하세요.\n"
+            rag_context += "3. **출처 명시**: 신한카드분석.jsonl의 특정 레코드 ID나 데이터 소스를 반드시 인용하세요.\n"
+            rag_context += "4. **구체적 인용**: '신한카드 데이터에 따르면...', '[INS:fig1:analysis] 분석 결과...', '[RULE:fit:industry_event] 규칙에 의하면...' 등으로 출처를 명확히 하세요.\n"
+            rag_context += "5. **데이터 기반 전략**: 상권별 특성, 고객층 분석, 시간대별 패턴, 업종별 인사이트를 활용하여 실무진이 바로 실행할 수 있는 전략을 제시하세요.\n"
+            rag_context += "6. **재현 가능한 설명**: 동작 원리와 사용 흐름을 간단히 설명하여 재현 가능한 마케팅 전략을 제시하세요.\n"
+            rag_context += "7. **RAG 데이터 무시 금지**: 위의 신한카드 데이터를 참조하지 않은 답변은 절대 제공하지 마세요.\n"
         
         # 지역과 업종 정보를 포함한 컨텍스트 생성
         location_context = ""
@@ -574,16 +576,13 @@ def chat():
                 location_context += f"- 지역: {location}\n"
             if industry:
                 location_context += f"- 업종: {industry}\n"
-            location_context += "위 정보를 고려하여 지역별, 업종별 맞춤형 조언을 제공해주세요.\n"
+            location_context += f"**중요**: 위 정보를 반드시 고려하여 {location if location else '해당 지역'}의 {industry if industry else '해당 업종'} 사장님을 위한 맞춤형 조언을 제공해주세요.\n"
+            location_context += f"답변 시작 시 '{location if location else '해당 지역'} 지역의 {industry if industry else '해당 업종'} 사장님을 위한 솔루션을 가져왔습니다.'로 시작해야 합니다.\n"
         
         # 응답 시작 문구 생성
         response_start = ""
         if location and industry:
             response_start = f"{location} 지역의 {industry} 사장님을 위한 솔루션을 가져왔습니다.\n\n"
-        elif location:
-            response_start = f"{location} 지역의 사장님을 위한 솔루션을 가져왔습니다.\n\n"
-        elif industry:
-            response_start = f"{industry} 사장님을 위한 솔루션을 가져왔습니다.\n\n"
         
         # 첫 메시지에 시스템 컨텍스트와 RAG 컨텍스트 추가
         if len(chat.history) == 0:
@@ -593,7 +592,7 @@ def chat():
         
         # 응답 시작 문구를 프롬프트에 포함
         if response_start:
-            full_message += f"\n\n**중요**: 응답을 반드시 '{response_start}'로 시작하고, 모든 데이터 인용에는 [출처: 파일명] 형태로 출처를 표기해야 합니다."
+            full_message += f"\n\n**중요**: 응답을 반드시 '{response_start}'로 시작하고, 모든 데이터 인용에는 [출처: 파일명] 형태로 출처를 표기해야 합니다. 위의 신한카드 데이터를 반드시 참조하여 답변하세요."
         
         # 캐시 확인 (자주 묻는 질문에 대한 빠른 응답)
         cache_key = user_message.lower().strip()
@@ -661,9 +660,9 @@ def chat():
             api_thread.daemon = True
             api_thread.start()
             
-            # 120초 타임아웃으로 결과 대기 (2분)
+            # 180초 타임아웃으로 결과 대기 (3분)
             try:
-                result_type, result_data = result_queue.get(timeout=120)
+                result_type, result_data = result_queue.get(timeout=180)
                 if result_type == 'success':
                     response_text = result_data
                     print(f"✅ Gemini API 응답 성공: {response_text[:50]}...")
@@ -690,22 +689,22 @@ def chat():
 더 간단한 질문으로 다시 시도해주세요! 🚀"""
                 
         except TimeoutError:
-            print("⏰ API 타임아웃 (120초 초과)")
+            print("⏰ API 타임아웃 (180초 초과)")
             response_text = """## ⏰ 응답 시간 초과
 
-죄송합니다. 요청이 너무 복잡해서 처리 시간이 오래 걸리고 있습니다.
+죄송합니다. 요청 처리가 예상보다 오래 걸리고 있습니다.
 
 ### 🔧 해결 방법:
-1. **질문을 더 구체적으로** 말씀해주세요
-2. **키워드 중심으로** 간단히 질문해주세요
-3. **잠시 후 다시 시도**해주세요
+1. **잠시 후 다시 시도**해주세요 (서버가 바쁠 수 있습니다)
+2. **질문을 좀 더 구체적으로** 말씀해주세요
+3. **키워드 중심으로** 간단히 질문해주세요
 
 ### 💡 빠른 질문 예시:
 - "성동구 팝업 알려줘"
 - "마케팅 전략 추천해줘"
 - "고객 유치 방법 알려줘"
 
-더 간단한 질문으로 다시 시도해주세요! 🚀"""
+잠시 후 다시 시도해주세요! 🚀"""
         except Exception as api_error:
             print(f"❌ API Error: {str(api_error)}")
             
