@@ -123,8 +123,11 @@ def load_rag_documents():
                     content += f"총 라인 수: {len(lines)}\n\n"
                     content += "데이터 내용:\n"
                     
-                    # Render 환경에서 메모리 최적화: 처음 5개 레코드만 처리
-                    max_records = 5
+                    # 신한카드분석.jsonl은 전체 레코드 처리 (중요한 데이터)
+                    if '신한카드분석.jsonl' in file_path.name:
+                        max_records = len(lines)  # 전체 레코드 처리
+                    else:
+                        max_records = 5  # 다른 파일은 메모리 최적화
                     for i, line in enumerate(lines[:max_records]):
                         if line.strip():  # 빈 줄이 아닌 경우만
                             try:
@@ -238,13 +241,13 @@ def search_relevant_documents(query, max_docs=3):
             shinhan_file = filename
             break
     
-    # 신한카드 관련 질문인 경우 신한카드분석.jsonl을 최우선으로 포함
-    if shinhan_file and ('신한카드' in query_lower or '분석' in query_lower or '데이터' in query_lower):
+    # 모든 질문에 대해 신한카드분석.jsonl을 최우선으로 포함
+    if shinhan_file:
         doc_info = rag_documents[shinhan_file]
         relevant_docs.append({
             'filename': shinhan_file,
-            'content': doc_info['content'][:2000],  # 신한카드 파일은 더 많은 문자 사용
-            'relevance_score': 100  # 최고 우선순위
+            'content': doc_info['content'][:8000],  # 신한카드 파일은 더 많은 문자 사용 (3000 → 8000)
+            'relevance_score': 1000  # 최고 우선순위 (기존 100에서 1000으로 증가)
         })
     
     # 2. 키워드 기반 검색 (인덱스 활용)
@@ -276,12 +279,12 @@ def search_relevant_documents(query, max_docs=3):
                 if keyword in filename.lower():
                     relevance_score += 2
             
-            # 신한카드분석.jsonl 파일에 추가 가중치
+            # 신한카드분석.jsonl 파일에 추가 가중치 (최우선)
             if '신한카드분석.jsonl' in filename:
-                relevance_score += 50
+                relevance_score += 500  # 기존 50에서 500으로 대폭 증가
             
             # 신한카드 데이터는 더 많은 문자 사용 (제한 강화)
-            max_chars = 2000 if '신한카드' in filename.lower() or 'shinhan' in filename.lower() else 500
+            max_chars = 8000 if '신한카드' in filename.lower() or 'shinhan' in filename.lower() else 500
             
             relevant_docs.append({
                 'filename': filename,
