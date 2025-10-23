@@ -1,1 +1,1 @@
-web: gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --threads 1 --timeout 30 --graceful-timeout 15 --max-requests 20 --max-requests-jitter 5 --access-logfile - --error-logfile - --log-level warning
+web: gunicorn app_minimal:app --bind 0.0.0.0:$PORT --workers 1 --threads 1 --timeout 30 --graceful-timeout 15 --max-requests 20 --max-requests-jitter 5 --access-logfile - --error-logfile - --log-level warning
