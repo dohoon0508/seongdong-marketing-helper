@@ -447,6 +447,11 @@ def chat():
         def get_system_prompt(menu_type=None):
             base_context = """당신은 성동구 지역 소상공인을 위한 전문 마케팅 도우미입니다.
 
+❗ **출처 명시 필수 규칙**:
+- 모든 답변에는 반드시 데이터 출처를 포함해야 합니다
+- 출처가 포함되지 않은 답변은 잘못된 것으로 간주됩니다
+- 반드시 [출처: 신한카드분석.jsonl] 또는 [출처: 파일명] 형태로 표기하세요
+
 🎯 **핵심 역할**:
 - 신한카드 데이터 기반 근거 있는 마케팅 전략 제시
 - 지역별/업종별 맞춤형 솔루션 제공
@@ -549,17 +554,18 @@ def chat():
         if relevant_docs:
             rag_context = "\n\n=== 📊 신한카드 데이터 분석 결과 및 참고 문서 ===\n"
             for doc in relevant_docs:
-                rag_context += f"\n📁 파일: {doc['filename']}\n"
+                rag_context += f"\n📁 [출처파일: {doc['filename']} | 길이: {len(doc['content'])}자 | 우선순위: {doc['relevance_score']}점]\n"
                 rag_context += f"📋 내용: {doc['content']}\n"
                 rag_context += "---\n"
             
             # 강화된 프롬프트 엔지니어링 규칙
-            rag_context += "\n🔍 **필수 응답 규칙**:\n"
+            rag_context += "\n🔍 **필수 응답 규칙 (위반 시 답변 거부)**:\n"
             rag_context += "1. **근거 기반 제안**: 각 제안에 신한카드 데이터 근거(표/지표/규칙 등)를 함께 표기하세요.\n"
             rag_context += "2. **출처 명시**: 신한카드분석.jsonl의 특정 레코드 ID나 데이터 소스를 반드시 인용하세요.\n"
             rag_context += "3. **구체적 인용**: '신한카드 데이터에 따르면...', '[INS:fig1:analysis] 분석 결과...', '[RULE:fit:industry_event] 규칙에 의하면...' 등으로 출처를 명확히 하세요.\n"
             rag_context += "4. **데이터 기반 전략**: 상권별 특성, 고객층 분석, 시간대별 패턴, 업종별 인사이트를 활용하여 실무진이 바로 실행할 수 있는 전략을 제시하세요.\n"
             rag_context += "5. **재현 가능한 설명**: 동작 원리와 사용 흐름을 간단히 설명하여 재현 가능한 마케팅 전략을 제시하세요.\n"
+            rag_context += "6. **출처 누락 금지**: 위의 데이터를 참조하지 않은 답변은 절대 제공하지 마세요.\n"
         
         # 지역과 업종 정보를 포함한 컨텍스트 생성
         location_context = ""
@@ -588,7 +594,7 @@ def chat():
         
         # 응답 시작 문구를 프롬프트에 포함
         if response_start:
-            full_message += f"\n\n**중요**: 응답을 반드시 '{response_start}'로 시작해야 합니다."
+            full_message += f"\n\n**중요**: 응답을 반드시 '{response_start}'로 시작하고, 모든 데이터 인용에는 [출처: 파일명] 형태로 출처를 표기해야 합니다. 출처가 없는 답변은 잘못된 것으로 간주됩니다."
         
         # 캐시 확인 (자주 묻는 질문에 대한 빠른 응답)
         cache_key = user_message.lower().strip()
