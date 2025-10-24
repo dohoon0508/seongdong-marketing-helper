@@ -20,6 +20,7 @@ CORS(app)
 # ====== 전역 변수 ======
 user_setups = {}  # 사용자 설정 저장
 response_cache = {}  # 응답 캐시
+_cached_model = None  # 모델 전역 캐시
 
 # ====== 상수 ======
 GEN_MAX_OUTPUT_TOKENS = 4096
@@ -30,8 +31,8 @@ RETRY_BASE = 2
 RETRY_JITTER = 1
 
 # ====== RAG 정책 상수 ======
-K_TOTAL = 12  # 후보 문서 총량
-K_ANSWER = 6  # 최종 스니펫 수
+K_TOTAL = 6   # 후보 문서 총량 (12 → 6, 처리 시간 단축)
+K_ANSWER = 3  # 최종 스니펫 수 (6 → 3, 처리 시간 단축)
 SNIPPET_MIN_LENGTH = 450
 SNIPPET_MAX_LENGTH = 700
 DUPLICATE_THRESHOLD = 0.7  # Jaccard 유사도 임계값
@@ -235,16 +236,22 @@ def is_overloaded_error(msg):
     return any(keyword in msg.lower() for keyword in overloaded_keywords)
 
 def get_model():
-    """모델 가져오기"""
+    """모델 가져오기 (전역 캐시 사용)"""
+    global _cached_model
+    
+    if _cached_model is not None:
+        return _cached_model
+    
     if not os.getenv('GOOGLE_API_KEY'):
         print("⚠️ 경고: GOOGLE_API_KEY가 설정되지 않았습니다. 데모 모드로 실행됩니다.")
-        return "demo_model"  # API Key 없이도 작동하도록 수정
+        _cached_model = "demo_model"
+        return _cached_model
     else:
         print("✅ Google API Key가 설정되었습니다.")
         genai.configure(api_key=os.getenv('GOOGLE_API_KEY'))
-        model = genai.GenerativeModel('gemini-2.5-flash')
+        _cached_model = genai.GenerativeModel('gemini-2.5-flash')
         print("🤖 Gemini 모델 로드 완료")
-        return model
+        return _cached_model
 
 def load_calendar_events():
     """
@@ -955,6 +962,10 @@ def chat_api():
         
         if not user_message:
             return jsonify({'error': '메시지를 입력해주세요.'}), 400
+        
+        # 입력 길이 제한 (처리 시간 단축)
+        if len(user_message) > 500:
+            return jsonify({'error': '질문이 너무 깁니다. 500자 이내로 간단히 질문해주세요.'}), 400
         
         # 사용자 설정 가져오기
         setup = user_setups.get('default', {})
