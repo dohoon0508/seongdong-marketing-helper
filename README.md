@@ -1,5 +1,6 @@
 # 성동구 마케팅 도우미
 
+🌐 **웹사이트**: https://seongdong-marketing-helper.onrender.com/setup
 성동구 지역 소상공인을 위한 AI 기반 마케팅 도우미 서비스입니다.
 
 ## 🚀 Render 배포 가이드
